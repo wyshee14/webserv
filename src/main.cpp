@@ -1,11 +1,19 @@
 # include <iostream>
+#include "ConfigParsing/ConfigFile.hpp"
 
 int main(int ac, char **av)
 {
-	if (ac != 2)
+    if (ac != 2)
 	{
-		std::cerr << "Usage: ./config"
+        std::cerr << "Error: argument must be one valid config file" << std::endl;
+        return 1;
 	}
+    std::string fileName(av[1]);
+    ConfigFile file(fileName);
+    std::cout << "Filename: " << file.getPath() <<std::endl;
+    file.validateFilePath();
+
+    return 0;
 }
 
 // Psedocode
