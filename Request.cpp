@@ -71,6 +71,20 @@ int Request::check_size(char c)
            (c >= 'A' && c <= 'F');
 }
 
+Request::Request(size_t max_body_size)
+    : keep_alive(1),
+      r(1),
+      h(1),
+      b(1),
+      ce(0),
+      content_length(0),
+      size(0),
+      data(0),
+	  max_body_size(max_body_size)
+{
+	
+}
+
 int Request::get_value(char c)
 {
     if (c >= '0' && c <= '9')
@@ -343,18 +357,4 @@ int Request::feed(const std::string &s)
 	}
 
     return 0;
-}
-
-Request::Request(size_t max_body_size)
-    : keep_alive(1),
-      r(1),
-      h(1),
-      b(1),
-      ce(0),
-      content_length(0),
-      size(0),
-      data(0),
-	  max_body_size(max_body_size)
-{
-	
 }
