@@ -5,7 +5,7 @@ int main(int ac, char **av)
 {
     if (ac != 2)
 	{
-        std::cerr << "Error: argument must be one valid config file" << std::endl;
+        std::cerr << "Usage: ./webserv <config_file>" << std::endl;
         return 1;
 	}
     std::string fileName(av[1]);

@@ -3,6 +3,7 @@
 
 # include <iostream>
 #include <sys/stat.h>   //for stat()
+#include <fstream>
 
 class ConfigFile {
     private:
@@ -17,7 +18,8 @@ class ConfigFile {
 
         const std::string &getPath() const;
         bool isFileExist() const;
-        void validateFilePath() const;
+        bool openFile() const;
+        void readConfigFile() const;
         // readFiles
         // remove comments
         // remove whitespace
