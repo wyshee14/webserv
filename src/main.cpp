@@ -11,7 +11,15 @@ int main(int ac, char **av)
     std::string fileName(av[1]);
     ConfigFile file(fileName);
     std::cout << "Filename: " << file.getPath() <<std::endl;
-    file.validateFilePath();
+    try
+    {
+        file.processConfigFile();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 
     return 0;
 }

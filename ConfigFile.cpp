@@ -45,18 +45,16 @@ bool ConfigFile::openFile() const
     return true;
 }
 
-std::vector<std::string> ConfigFile::readLines() const
+std::vector<std::string> ConfigFile::readLines()
 {
     std::string line;
-    std::vector<std::string> vect;
     std::ifstream config(_path.c_str());
-    while (std::getline(config, line))
+    while (getline(config, line))
     {
-        // std::cout << line << std::endl;
-        vect.push_back(line);
+        std::cout << line << std::endl;
     }
     config.close();
-    return vect;
+
 }
 
 void ConfigFile::processConfigFile() const
@@ -70,7 +68,7 @@ void ConfigFile::processConfigFile() const
     // open file
     if (!openFile())
         throw std::runtime_error("Configuration file failed to open");
-    readLines();
+    // read lines
     // remove comments and whitespaces
     // tokenize directives
     // build ServerConfig and LocationConfig objects

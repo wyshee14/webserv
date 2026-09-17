@@ -4,6 +4,7 @@
 # include <iostream>
 #include <sys/stat.h>   //for stat()
 #include <fstream>
+# include <vector>
 
 class ConfigFile {
     private:
@@ -19,10 +20,10 @@ class ConfigFile {
         const std::string &getPath() const;
         bool isFileExist() const;
         bool openFile() const;
-        void readConfigFile() const;
-        // readFiles
+        std::vector<std::string> readLines() const;
         // remove comments
         // remove whitespace
+        void processConfigFile() const;
 };
 
 #endif
