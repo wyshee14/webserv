@@ -8,16 +8,16 @@ This is a project to build a robust HTTP server capable of parsing NGINX-style c
 ```
 git clone git@github.com:wyshee14/webserv.git
 ```
-2. Compile this project \
+2. Compile this project
 ```
 make
 ```
-3. Execute the program \
+3. Execute the program
 ```
 .webserv <configuration_file>
 ```
 (Note: All configuration files are stored in folder config/)
-4. Open your browser based on the port in configuration file \
+4. Open your browser based on the port in configuration file
 ```
 eg: http://localhost:8000
 ``` 
