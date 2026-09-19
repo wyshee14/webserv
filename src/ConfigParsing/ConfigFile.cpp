@@ -1,12 +1,17 @@
 # include "ConfigFile.hpp"
 
-ConfigFile::ConfigFile(const std::string &path) : _path(path){}
+ConfigFile::ConfigFile(const std::string &path) : _path(path), _tokens() {}
 
 ConfigFile::~ConfigFile(){}
 
 const std::string &ConfigFile::getPath() const
 {
     return _path;
+}
+
+const std::vector<Token> &ConfigFile::getTokens() const
+{
+    return _tokens;
 }
 
 bool ConfigFile::isFileExist() const
@@ -16,21 +21,13 @@ bool ConfigFile::isFileExist() const
 
     // If the file path/directory exists at the path returns 0
     if (stat(_path.c_str(), &fileInfo) != 0) 
-    {
-        std::cout << " Path is invalid" << std::endl;
         return false;
-    }
-    std::cout << "Path is valid" << std::endl;
     // returns boolean on path is a regular file; 0 is false(means is directory or others)
     if (!S_ISREG(fileInfo.st_mode))
-    {
-        std::cout << "Path is not a regular file" << std::endl;
         return false;
-    }
     // check if the file ends with .conf
     if (_path.length() < 5 || _path.substr(_path.length() - 5) != ".conf")
         return false;
-    std::cout << "Path is a valid configuration file" << std::endl;
     return true;
 }
 
@@ -45,33 +42,91 @@ bool ConfigFile::openFile() const
     return true;
 }
 
-std::vector<std::string> ConfigFile::readLines() const
+void ConfigFile::readLines()
 {
     std::string line;
-    std::vector<std::string> vect;
     std::ifstream config(_path.c_str());
     while (std::getline(config, line))
     {
-        // std::cout << line << std::endl;
-        vect.push_back(line);
+        removeComments(line);
+        tokenize(line);
     }
     config.close();
-    return vect;
 }
 
-void ConfigFile::processConfigFile() const
+void ConfigFile::removeComments(std::string &line)
 {
-    // check path is empty
+    size_t found = line.find("#");
+    if (found != std::string::npos)
+    {
+        line.erase(found);
+    }
+}
+
+void ConfigFile::printTokens() const
+{
+    for (std::vector<Token>::const_iterator it = _tokens.begin(); it != _tokens.end(); it++)
+    {
+        std::cout << "Token type: " << (*it).type << ", value: " << (*it).value << std::endl;
+    }
+}
+
+void ConfigFile::tokenize(std::string &line)
+{
+    std::string word;
+    for(std::string::const_iterator it = line.begin(); it != line.end(); it++)
+    {
+        if (std::isspace(*it))
+        {
+            if (!word.empty())
+            {
+                _tokens.push_back(Token(WORD, word));
+                word.clear();
+            }
+        }
+        else if (*it == '{')
+        {
+            if (!word.empty())
+            {
+                _tokens.push_back(Token(WORD, word));
+                word.clear();
+            }
+            _tokens.push_back(Token(LBRACES, "{"));
+        }
+        else if (*it == '}')
+        {
+            if (!word.empty())
+            {
+                _tokens.push_back(Token(WORD, word));
+                word.clear();
+            }
+            _tokens.push_back(Token(RBRACES, "}"));
+        }
+        else if (*it == ';')
+        {
+            if (!word.empty())
+            {
+                _tokens.push_back(Token(WORD, word));
+                word.clear();
+            }
+            _tokens.push_back(Token(SEMICOLON, ";"));
+        }
+        else
+        {
+            word.push_back(*it);
+        }
+    }
+}
+
+void ConfigFile::processConfigFile()
+{
     if (_path.empty())
         throw std::runtime_error("Configuration path is empty") ;
-    // check file exists
     if (!isFileExist())
         throw std::runtime_error("Configuration path is missing or is not a regular file: " + _path);
-    // open file
     if (!openFile())
         throw std::runtime_error("Configuration file failed to open");
     readLines();
-    // remove comments and whitespaces
-    // tokenize directives
+    printTokens();
     // build ServerConfig and LocationConfig objects
 }

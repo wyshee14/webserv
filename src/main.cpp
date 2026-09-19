@@ -1,5 +1,5 @@
 # include <iostream>
-#include "ConfigParsing/ConfigFile.hpp"
+#include "ConfigParsing/Webserv.hpp"
 
 int main(int ac, char **av)
 {
@@ -8,19 +8,17 @@ int main(int ac, char **av)
         std::cerr << "Usage: ./webserv <config_file>" << std::endl;
         return 1;
 	}
-    std::string fileName(av[1]);
-    ConfigFile file(fileName);
-    std::cout << "Filename: " << file.getPath() <<std::endl;
+    std::string path(av[1]);
     try
     {
-        file.processConfigFile();
+        Webserv server(path);
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        return 1;
     }
     
-
     return 0;
 }
 

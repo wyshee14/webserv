@@ -6,24 +6,39 @@
 #include <fstream>
 # include <vector>
 
+enum TokenType {
+    WORD, 
+    LBRACES, 
+    RBRACES, 
+    SEMICOLON
+};
+
+struct Token {
+    TokenType type;
+    std::string value;
+
+    Token(TokenType tokenType, const std::string &tokenValue)
+        : type(tokenType), value(tokenValue) {}
+};
+
 class ConfigFile {
     private:
-        std::string _path;
+        const std::string _path;
+        std::vector<Token> _tokens;
 
     public:
-        // ConfigFile();
         ConfigFile(const std::string &path);
-        // ConfigFile(const ConfigFile &copy);
-        // ConfigFile &operator=(const ConfigFile &other);
         ~ConfigFile();
 
         const std::string &getPath() const;
+        const std::vector<Token> &getTokens() const;
+        void printTokens() const;
         bool isFileExist() const;
         bool openFile() const;
-        std::vector<std::string> readLines() const;
-        // remove comments
-        // remove whitespace
-        void processConfigFile() const;
+        void readLines();
+        void removeComments(std::string &line);
+        void tokenize(std::string &line);
+        void processConfigFile();
 };
 
 #endif
