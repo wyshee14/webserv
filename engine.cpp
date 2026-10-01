@@ -31,14 +31,7 @@ std::string get(std::string b, std::string path, std::string c, std::string i, i
 
 		if (a)
 		{
-			std::string body = generate(p, path);
-
-			if (body == "")
-			{
-				return err(403);
-			}
-
-			return resp(200, "OK", body, "");
+			return generate(p, path);
 		}
 
 		return err(403);
@@ -87,4 +80,52 @@ std::string delete(std::string b, std::string path, std::string c)
     }
 
 	return resp(204, "No Content", "", "");
+}
+
+std::string generate(std::string path, std::string url)
+{
+	DIR *dir;
+	struct dirent *entry;
+	std::string name;
+	std::string href;
+	std::string body;
+
+	dir = opendir(path.c_str());
+	if (!dir)
+	{
+		if (errno == EACCES)
+			return err(403);
+		if (errno == ENOENT)
+			return err(404);
+		return err(500);
+	}
+
+	body = "<html><body>\n";
+	body += "<h1>Index of ";
+	body += url;
+	body += "</h1>\n";
+
+	while ((entry = readdir(dir)) != NULL)
+	{
+		name = entry->d_name;
+
+		if (name == "." || name == "..")
+			continue;
+
+		href = url;
+
+		if (href.empty() || href[href.size() - 1] != '/')
+			href += "/";
+
+		href += name;
+		body += "<a href=\"";
+		body += href;
+		body += "\">";
+		body += name;
+		body += "</a><br>\n";
+	}
+
+	closedir(dir);
+	body += "</body></html>\n";
+	return resp(200, "OK", body, "");
 }
