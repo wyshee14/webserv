@@ -6,9 +6,12 @@ CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address
 
 SRC = src/main.cpp \
 	  src/ConfigParsing/ConfigFile.cpp \
+	  src/ConfigParsing/Webserv.cpp \
+	  src/ConfigParsing/ConfigException.cpp \
+	  src/ConfigParsing/ConfigParser.cpp \
+	  src/ConfigParsing/Directive.cpp \
 	  src/ConfigParsing/ServerConfig.cpp \
-	  src/ConfigParsing/LocationConfig.cpp \
-	  src/ConfigParsing/Webserv.cpp
+	  src/ConfigParsing/LocationConfig.cpp 
 
 OBJ = $(SRC:.cpp=.o)
 

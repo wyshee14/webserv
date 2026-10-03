@@ -1,11 +1,13 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
-# include <iostream>
+# include <string>
 # include <vector>
 # include <stdint.h>    // Library for uint16_t
 # include <map>
 # include "LocationConfig.hpp"
+# include "Token.hpp"
+# include "Directive.hpp"
 
 // class LocationConfig;
 
@@ -19,9 +21,11 @@ class ServerConfig {
         bool _autoindex;
         size_t _clientMaxBodySize;
         std::vector<LocationConfig> _locations;
+        std::vector<Directive> _directives; 
 
     public:
         ServerConfig();
+        ServerConfig(std::vector<Directive> _directives); 
         ServerConfig(const ServerConfig &copy);
         ServerConfig &operator=(const ServerConfig &other);
         ~ServerConfig();
@@ -29,6 +33,9 @@ class ServerConfig {
         const std::string &getRoot() const;
         const std::vector<LocationConfig> &getLocations() const;
         const LocationConfig* findLocation(const std::string &uri) const;
+        void parseServerDirectives();
+        void addLocation();
+        void addDirectives(const Directive &directive);
 
 };
 

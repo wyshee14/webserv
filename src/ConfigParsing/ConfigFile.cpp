@@ -1,4 +1,10 @@
 # include "ConfigFile.hpp"
+# include <sys/stat.h>
+# include <fstream>
+# include <iostream>
+# include <stdexcept>
+# include <cctype>
+# include "ConfigException.hpp"
 
 ConfigFile::ConfigFile(const std::string &path) : _path(path), _tokens() {}
 
@@ -71,62 +77,56 @@ void ConfigFile::printTokens() const
     }
 }
 
+static bool isSymbol(char c)
+{
+    if (c == '{' || c == '}' || c == ';')
+        return true;
+    return false;
+}
+
 void ConfigFile::tokenize(std::string &line)
 {
     std::string word;
     for(std::string::const_iterator it = line.begin(); it != line.end(); it++)
     {
-        if (std::isspace(*it))
+        if (std::isspace(*it) || isSymbol(*it))
         {
             if (!word.empty())
             {
                 _tokens.push_back(Token(WORD, word));
                 word.clear();
             }
-        }
-        else if (*it == '{')
-        {
-            if (!word.empty())
+            if (isSymbol(*it))
             {
-                _tokens.push_back(Token(WORD, word));
-                word.clear();
+                TokenType type;
+                if (*it == '{')
+                    type = LBRACES;
+                else if (*it == '}')
+                    type = RBRACES;
+                else
+                    type = SEMICOLON;
+                _tokens.push_back(Token (type, std::string(1, *it)));
             }
-            _tokens.push_back(Token(LBRACES, "{"));
-        }
-        else if (*it == '}')
-        {
-            if (!word.empty())
-            {
-                _tokens.push_back(Token(WORD, word));
-                word.clear();
-            }
-            _tokens.push_back(Token(RBRACES, "}"));
-        }
-        else if (*it == ';')
-        {
-            if (!word.empty())
-            {
-                _tokens.push_back(Token(WORD, word));
-                word.clear();
-            }
-            _tokens.push_back(Token(SEMICOLON, ";"));
         }
         else
-        {
             word.push_back(*it);
-        }
+    }
+    if (!word.empty())
+    {
+        _tokens.push_back(Token(WORD, word));
+        word.clear();
     }
 }
 
 void ConfigFile::processConfigFile()
 {
     if (_path.empty())
-        throw std::runtime_error("Configuration path is empty") ;
+        throw std::runtime_error("Configuration path is empty");
     if (!isFileExist())
-        throw std::runtime_error("Configuration path is missing or is not a regular file: " + _path);
+        throw (ConfigException(ConfigException::INVALID_FILE));
+        // throw std::runtime_error("Configuration path is missing or is not a regular file: " + _path);
     if (!openFile())
         throw std::runtime_error("Configuration file failed to open");
     readLines();
     printTokens();
-    // build ServerConfig and LocationConfig objects
 }

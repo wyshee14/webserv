@@ -1,25 +1,11 @@
 #ifndef CONFIGFILE_HPP
 # define CONFIGFILE_HPP
 
-# include <iostream>
-#include <sys/stat.h>   //for stat()
-#include <fstream>
+# include <string>
 # include <vector>
-
-enum TokenType {
-    WORD, 
-    LBRACES, 
-    RBRACES, 
-    SEMICOLON
-};
-
-struct Token {
-    TokenType type;
-    std::string value;
-
-    Token(TokenType tokenType, const std::string &tokenValue)
-        : type(tokenType), value(tokenValue) {}
-};
+# include <sys/stat.h>   //for stat()
+# include <fstream>
+# include "Token.hpp"
 
 class ConfigFile {
     private:
