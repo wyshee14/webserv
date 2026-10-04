@@ -3,6 +3,7 @@
 
 # include <string>
 # include <vector>
+# include "Directive.hpp"
 
 class LocationConfig {
     private:
@@ -24,6 +25,8 @@ class LocationConfig {
         const std::string &getPath() const;
         const std::string &getRoot() const;
         bool isAutoindexEnabled() const;
+        void addDirectives(const Directive &directive);
+        void validatePath(const std::string &path);
 };
 
 #endif

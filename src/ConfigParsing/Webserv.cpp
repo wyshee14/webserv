@@ -6,8 +6,13 @@ Webserv::Webserv(const std::string &configPath)
 {
     ConfigFile config(configPath);
     config.processConfigFile();
-    ConfigParser parser;
-    parser.parseTokens(config.getTokens());
+    ConfigParser parser(config.getTokens());
+    _servers = parser.parseTokens();
 }
 
 Webserv::~Webserv() {}
+
+const std::vector<ServerConfig> &Webserv::getServers() const
+{
+    return _servers;
+}

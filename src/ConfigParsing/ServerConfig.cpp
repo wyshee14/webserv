@@ -35,3 +35,8 @@ void ServerConfig::addDirectives(const Directive &directive)
 {
     (void)directive;
 }
+
+ void ServerConfig::addLocation(LocationConfig &location)
+ {
+    (void)location;
+ }

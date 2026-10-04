@@ -6,85 +6,116 @@
 # include "Directive.hpp"
 # include "ConfigParser.hpp"
 
-ConfigParser::ConfigParser(){}
+ConfigParser::ConfigParser(const std::vector<Token> &tokens) 
+    : _tokens(tokens), _current(_tokens.begin()), _end(_tokens.end()){}
 
 ConfigParser::~ConfigParser() {}
 
-void ConfigParser::parseTokens(std::vector<Token> tokens)
+std::vector<ServerConfig> ConfigParser::parseTokens()
 {
     std::vector<ServerConfig> servers;     // an array of server block
-    std::vector<Token>::iterator current = tokens.begin();
 
     // check if the token is nothing
-    if (current == tokens.end())
+    if (_current == _end)
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    while (current != tokens.end())
+    while (_current != _end)
     {
         // check the first word must be server
-        if (current->type != WORD || current->value != "server")
+        if (_current->type != WORD || _current->value != "server")
         {
-            std::cout << "currenttt: [" << current->value << "]" << std::endl;
             throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
         }
-        servers.push_back(parseServerBlock(current, tokens.end()));
+        servers.push_back(parseServerBlock());
     }
+    return servers;
 }
 
-ServerConfig ConfigParser::parseServerBlock(std::vector<Token>::iterator &current, std::vector<Token>::iterator end)
+ServerConfig ConfigParser::parseServerBlock()
 {
     ServerConfig server;
 
-    // server
-    if (current == end || current->value != "server")
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    ++current;
+    // skip "server"
+    ++_current;
 
-    // '{'
-    if (current == end || current->type != LBRACES)
+    if (!expectSymbol(LBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    ++current;
     
-    while (current != end && current->type != RBRACES)
+    while (_current != _end && _current->type != RBRACES)
     {
-        if (current->type != WORD)
+        if (_current->type != WORD)
             throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-        if (current->value == "location")
+        if (_current->value == "location")
         {
-            // LocationConfig location = parseLocationBlock(current, end);
-            // server.addLocation(location);
+            LocationConfig location = parseLocationBlock();
+            server.addLocation(location);
         }
         else
         {
-            Directive directive = parseDirectives(current, end);
+            Directive directive = parseDirectives();
             validateDirective(directive, SERVER);
             server.addDirectives(directive);
         }
     }
-    if (current == end || current->type != RBRACES)
-    {
+    if (!expectSymbol(RBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    }
-    // skip the close bracket '}'
-    ++current;
     return server;
 }
 
-Directive ConfigParser::parseDirectives(std::vector<Token>::iterator &current, std::vector<Token>::iterator end) 
+LocationConfig ConfigParser::parseLocationBlock()
 {
-    if (current == end || current->type != WORD)
+    LocationConfig location;
+
+    // skip "location"
+    ++_current;
+
+    // location must have path
+    if (_current != _end && _current->type != WORD)
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+    location.validatePath(_current->value);
+    ++_current;
+
+    if (!expectSymbol(LBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    std::string key = current->value;
+    
+    while (_current != _end && _current->type != RBRACES)
+    {
+        if (_current->type != WORD)
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        else
+        {
+            Directive directive = parseDirectives();
+            validateDirective(directive, LOCATION);
+            location.addDirectives(directive);
+        }
+    }
+    if (!expectSymbol(RBRACES))
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+    return location;
+}
+
+Directive ConfigParser::parseDirectives() 
+{
+    if (_current == _end || _current->type != WORD)
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+    std::string key = _current->value;
     std::vector<std::string> values;
     // skip the key
-    ++current;
-    while (current != end && current->type == WORD)
+    ++_current;
+    while (_current != _end && _current->type == WORD)
     {
-        values.push_back(current->value);
-        ++current;
+        values.push_back(_current->value);
+        ++_current;
     }
-    if (current == end || current->type != SEMICOLON)
+    if (!expectSymbol(SEMICOLON))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
-    // skip semicolon
-    ++current;
     return Directive(key, values);
+}
+
+bool ConfigParser::expectSymbol(TokenType type)
+{
+    if (_current == _end || _current->type != type)
+        return false;
+    // skip the braces
+    ++_current;
+    return true;
 }

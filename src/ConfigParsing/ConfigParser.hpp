@@ -6,15 +6,24 @@
 # include "ServerConfig.hpp"
 # include "Directive.hpp"
 
-// TODO: convert to a free function, no need to be in a class
 class ConfigParser {
+    private:
+        const std::vector<Token> &_tokens;
+        std::vector<Token>::const_iterator _current;
+        std::vector<Token>::const_iterator _end;
+
     public:
-        ConfigParser();
+        ConfigParser(const std::vector<Token> &tokens);
         ~ConfigParser();
 
-        void parseTokens(std::vector<Token> tokens);
-        ServerConfig parseServerBlock(std::vector<Token>::iterator &current, std::vector<Token>::iterator end);
-        Directive parseDirectives(std::vector<Token>::iterator &current, std::vector<Token>::iterator end);
+        std::vector<ServerConfig> parseTokens();
+        ServerConfig parseServerBlock();
+        LocationConfig parseLocationBlock();
+        Directive parseDirectives();
+
+        // Helper
+        bool expectSymbol(TokenType type);
+
 };
 
 #endif

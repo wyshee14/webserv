@@ -27,3 +27,13 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 }
 
 LocationConfig::~LocationConfig() {}
+
+void LocationConfig::addDirectives(const Directive &directive)
+{
+    (void)directive;
+}
+
+void LocationConfig::validatePath(const std::string &path)
+{
+	(void)path;
+}

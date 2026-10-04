@@ -34,7 +34,7 @@ class ServerConfig {
         const std::vector<LocationConfig> &getLocations() const;
         const LocationConfig* findLocation(const std::string &uri) const;
         void parseServerDirectives();
-        void addLocation();
+        void addLocation(LocationConfig &location);
         void addDirectives(const Directive &directive);
 
 };

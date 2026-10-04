@@ -9,13 +9,13 @@
 
 class Webserv {
     private:
-        // std::vector<ServerConfig> _servers;
+        std::vector<ServerConfig> _servers;
 
     public:
         Webserv(const std::string &configPath);
         ~Webserv(); 
         
-        // const std::vector<ServerConfig> &getServers() const;
+        const std::vector<ServerConfig> &getServers() const;
 };
 
 #endif
