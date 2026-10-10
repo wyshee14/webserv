@@ -17,13 +17,13 @@ std::vector<ServerConfig> ConfigParser::parseTokens()
 
     // check if the token is nothing
     if (_current == _end)
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     while (_current != _end)
     {
         // check the first word must be server
         if (_current->type != WORD || _current->value != "server")
         {
-            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
         }
         servers.push_back(parseServerBlock());
     }
@@ -38,12 +38,12 @@ ServerConfig ConfigParser::parseServerBlock()
     ++_current;
 
     if (!expectSymbol(LBRACES))
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     
     while (_current != _end && _current->type != RBRACES)
     {
         if (_current->type != WORD)
-            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
         if (_current->value == "location")
         {
             LocationConfig location = parseLocationBlock();
@@ -57,7 +57,7 @@ ServerConfig ConfigParser::parseServerBlock()
         }
     }
     if (!expectSymbol(RBRACES))
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     return server;
 }
 
@@ -70,17 +70,17 @@ LocationConfig ConfigParser::parseLocationBlock()
 
     // location must have path
     if (_current != _end && _current->type != WORD)
-            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     location.validatePath(_current->value);
     ++_current;
 
     if (!expectSymbol(LBRACES))
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     
     while (_current != _end && _current->type != RBRACES)
     {
         if (_current->type != WORD)
-            throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+            throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
         else
         {
             Directive directive = parseDirectives();
@@ -89,14 +89,14 @@ LocationConfig ConfigParser::parseLocationBlock()
         }
     }
     if (!expectSymbol(RBRACES))
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     return location;
 }
 
 Directive ConfigParser::parseDirectives() 
 {
     if (_current == _end || _current->type != WORD)
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     std::string key = _current->value;
     std::vector<std::string> values;
     // skip the key
@@ -107,7 +107,7 @@ Directive ConfigParser::parseDirectives()
         ++_current;
     }
     if (!expectSymbol(SEMICOLON))
-        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
     return Directive(key, values);
 }
 

@@ -15,13 +15,17 @@ class ConfigException : public std::exception {
             UNKNOWN_DIRECTIVE,
             WRONG_DIRECTIVE_CONTEXT,
             INVLAID_DIRECTIVE_VALUES,
+            INVALID_PORT_NUMBER,
+            INVALID_IP_ADDRESS,
         };
-        ConfigException(errorType err);
+        // dynamic message
+        ConfigException(errorType err, const std::string &message = "");
         ~ConfigException() throw();
         const char* what() const throw();
 
     private:
         errorType _error;
+        std::string _message;
     
 };
 

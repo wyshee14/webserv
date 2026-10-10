@@ -123,7 +123,7 @@ void ConfigFile::processConfigFile()
     if (_path.empty())
         throw std::runtime_error("Configuration path is empty");
     if (!isFileExist())
-        throw (ConfigException(ConfigException::INVALID_FILE));
+        throw (ConfigException(ConfigException::INVALID_FILE, getPath()));
         // throw std::runtime_error("Configuration path is missing or is not a regular file: " + _path);
     if (!openFile())
         throw std::runtime_error("Configuration file failed to open");

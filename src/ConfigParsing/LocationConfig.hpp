@@ -9,7 +9,7 @@ class LocationConfig {
     private:
         std::string _path;
         std::string _root;
-        std::string _indexFiles;
+        std::vector<std::string> _indexFiles;
         std::vector<std::string> _allowedMethods;
         bool _autoindex;
         std::string _redirectTarget;
