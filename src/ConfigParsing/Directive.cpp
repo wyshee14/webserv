@@ -3,8 +3,8 @@
 # include "ConfigException.hpp"
 # include <stdlib.h>    // library for strtoul
 # include <sys/stat.h>
-#include <cerrno>
-#include <cstring>
+# include "ConfigFile.hpp"
+# include <iostream>
 
 static bool isAllDigit(std::string &raw, unsigned long max)
 {
@@ -78,16 +78,24 @@ static void validateRoot(const std::vector<std::string> &values)
         throw ConfigException(ConfigException::INVALID_DIRECTORY, values[0]);
 }
 
+// cehck that this should be a file
 static void validateIndex(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    if (values.empty())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "index");
+    for (std::vector<std::string>::const_iterator it = values.begin(); it != values.end(); ++it)
+    {
+        if (it->empty() || it->find('/') != std::string::npos)
+            throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, *it);
+    }
 }
 
 static void validateAutoindex(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    if (values.size() != 1)
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "autoindex");
+    if (values[0] != "true" && values[0] != "false")
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "autoindex");
 }
 
 static void validateErrorPage(const std::vector<std::string> &values)

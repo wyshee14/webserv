@@ -26,7 +26,6 @@ class ServerConfig {
 
     public:
         ServerConfig();
-        ServerConfig(std::vector<Directive> _directives); 
         ServerConfig(const ServerConfig &copy);
         ServerConfig &operator=(const ServerConfig &other);
         ~ServerConfig();
@@ -34,12 +33,16 @@ class ServerConfig {
         // Getter
         const std::vector<ListenDirective> &getListenEndpoint() const;
         const std::string &getRoot() const;
+        const std::vector<std::string> &getIndex() const;
+        const bool &getAutoindex() const;
         const std::vector<LocationConfig> &getLocations() const;
         const LocationConfig* findLocation(const std::string &uri) const;
 
         // Setter
         void setListenEndpoints(const std::string &value);
         void setRoot(const std::string &value);
+        void setIndex(std::vector<std::string> index);
+        void setAutoindex(const std::string &value);
 
         void addLocation(LocationConfig &location);
         void addDirectives(const Directive &directive);

@@ -43,8 +43,52 @@ void ServerConfig::addDirectives(const Directive &directive)
         setRoot(directive.values[0]);
         _hasRoot = true;
     }
+    else if (directive.key == "index")
+    {
+        setIndex(directive.values);
+    }
+    else if (directive.key == "autoindex" && !_hasAutoindex)
+    {
+        setAutoindex(directive.values[0]);
+        _hasAutoindex = true;
+    }
     else
         throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, directive.key);
+}
+
+const bool &ServerConfig::getAutoindex() const
+{
+    return _autoindex;
+}
+
+void ServerConfig::setAutoindex(const std::string &value)
+{
+    if (value == "true")
+        _autoindex = true;
+    else
+        _autoindex = false;
+}
+
+const std::vector<std::string> &ServerConfig::getIndex() const
+{
+    return _indexFiles;
+}
+
+void ServerConfig::setIndex(std::vector<std::string> index)
+{
+    // combine the values if got duplicate index entry
+    _indexFiles.insert(_indexFiles.end(), index.begin(), index.end());
+    // std::cout << "index: ";
+    // for (std::vector<std::string>::iterator it = _indexFiles.begin(); it != _indexFiles.end(); it++)
+    // {
+    //     std::cout << *it << " ";
+    // }
+    // std::cout << std::endl;
+}
+
+const std::string &ServerConfig::getRoot() const
+{
+    return _root;
 }
 
 void ServerConfig::setRoot(const std::string &value)
