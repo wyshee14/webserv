@@ -35,6 +35,7 @@ class ServerConfig {
         const std::string &getRoot() const;
         const std::vector<std::string> &getIndex() const;
         const bool &getAutoindex() const;
+        const size_t &getClientMaxBodySize() const;
         const std::vector<LocationConfig> &getLocations() const;
         const LocationConfig* findLocation(const std::string &uri) const;
 
@@ -43,6 +44,7 @@ class ServerConfig {
         void setRoot(const std::string &value);
         void setIndex(std::vector<std::string> index);
         void setAutoindex(const std::string &value);
+        void setClientMaxBodySize(std::string value);
 
         void addLocation(LocationConfig &location);
         void addDirectives(const Directive &directive);

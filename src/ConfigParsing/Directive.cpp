@@ -78,7 +78,7 @@ static void validateRoot(const std::vector<std::string> &values)
         throw ConfigException(ConfigException::INVALID_DIRECTORY, values[0]);
 }
 
-// cehck that this should be a file
+// http part will append with the root and check if its a valid file
 static void validateIndex(const std::vector<std::string> &values)
 {
     if (values.empty())
@@ -104,10 +104,30 @@ static void validateErrorPage(const std::vector<std::string> &values)
         throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
     }
 
-    static void validateClientMaxBodySize(const std::vector<std::string> &values)
+// Default : 1M
+// Last character can be K, G, M, or none(represents in bytes)
+// other all digits
+static void validateClientMaxBodySize(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    if (values.size() != 1 || values[0].empty())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "client_max_body_size");
+    const std::string &value = values[0];
+    size_t digitCount = 0;
+    // cast converts to a positive byte value - prevent nagtive char value
+    while (digitCount < value.size() && std::isdigit(static_cast<unsigned char>(value[digitCount])))
+        ++digitCount;
+    if (digitCount == 0)
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, value);
+    if (digitCount < value.size())
+    {
+        char suffix = value[digitCount];
+        if (suffix != 'K' && suffix != 'M' && suffix != 'G') 
+            throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, value);
+        ++digitCount;
+    }
+    std::cout << digitCount << std::endl;
+    if (digitCount != value.size())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, value);
 }
 
 static void validateMethods(const std::vector<std::string> &values)

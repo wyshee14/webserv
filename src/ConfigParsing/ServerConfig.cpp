@@ -5,8 +5,10 @@
 ServerConfig::ServerConfig() 
 {
     _autoindex = false;
-    _clientMaxBodySize = 1000000;
+    _clientMaxBodySize = 1000000;       // Default 1 megabyte
     _hasRoot = false;
+    _hasAutoindex = false;
+    _hasClientMaxBodySize = false;
 }
 
 ServerConfig::ServerConfig(const ServerConfig &copy)
@@ -52,8 +54,34 @@ void ServerConfig::addDirectives(const Directive &directive)
         setAutoindex(directive.values[0]);
         _hasAutoindex = true;
     }
+    else if (directive.key == "client_max_body_size" && !_hasClientMaxBodySize)
+    {
+        setClientMaxBodySize(directive.values[0]);
+        _hasClientMaxBodySize = true;
+    }    
     else
         throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, directive.key);
+}
+
+const size_t &ServerConfig::getClientMaxBodySize() const
+{
+    return _clientMaxBodySize;
+}
+
+void ServerConfig::setClientMaxBodySize(std::string value)
+{
+    char suffix = value[value.size() - 1];
+    if (!std::isdigit(suffix))
+        value.erase(value.size() - 1);
+    size_t size = strtoul(value.c_str(), NULL, 10);
+    if (suffix == 'K')
+        size *= 1000;
+    else if (suffix == 'M')
+        size *= 1000000;
+    else if (suffix == 'G')
+        size *= 1000000000;
+    _clientMaxBodySize = size;
+    std::cout << "client max body size: " << getClientMaxBodySize() << std::endl;
 }
 
 const bool &ServerConfig::getAutoindex() const
