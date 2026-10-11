@@ -6,7 +6,7 @@
 # include "ConfigFile.hpp"
 # include <iostream>
 
-static bool isAllDigit(std::string &raw, unsigned long max)
+static bool isAllDigit(const std::string &raw, unsigned long max)
 {
     for(size_t i = 0; i < raw.length(); i++)
     {
@@ -98,11 +98,27 @@ static void validateAutoindex(const std::vector<std::string> &values)
         throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "autoindex");
 }
 
+// [status_code](n) [error_file](1)
 static void validateErrorPage(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    std::vector<std::string> statusCode;
+    if (values.empty())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "error_page");
+    for (size_t i = 0; i < values.size(); i++)
+    {
+        for(size_t j = 0; j < values[i].length(); j++)
+        {
+            if (!std::isdigit(values[i][j]))
+                break ;
+        }
+        unsigned long status = strtoul(values[i].c_str(), NULL, 10);
+        if (status < 100 || status > 599)
+            throw ConfigException(ConfigException::INVALID_STATUS_CODE, values[i]);
+        statusCode.push_back(values[i]);
     }
+    if (values.size() - statusCode.size() != 1)
+        throw ConfigException(ConfigException::MISCONFIGURED_ERROR_FILE);
+}
 
 // Default : 1M
 // Last character can be K, G, M, or none(represents in bytes)
@@ -125,7 +141,6 @@ static void validateClientMaxBodySize(const std::vector<std::string> &values)
             throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, value);
         ++digitCount;
     }
-    std::cout << digitCount << std::endl;
     if (digitCount != value.size())
         throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, value);
 }

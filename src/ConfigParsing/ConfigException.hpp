@@ -19,6 +19,8 @@ class ConfigException : public std::exception {
             INVALID_PORT_NUMBER,
             INVALID_IP_ADDRESS,
             DUPLICATE_DIRECTIVE,
+            INVALID_STATUS_CODE,
+            MISCONFIGURED_ERROR_FILE,
         };
         // dynamic message
         ConfigException(errorType err, const std::string &message = "");

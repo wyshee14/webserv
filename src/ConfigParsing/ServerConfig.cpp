@@ -58,9 +58,35 @@ void ServerConfig::addDirectives(const Directive &directive)
     {
         setClientMaxBodySize(directive.values[0]);
         _hasClientMaxBodySize = true;
-    }    
+    }
+    else if (directive.key == "error_page")
+    {
+        setErrorPage(directive.values);
+    }  
     else
         throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, directive.key);
+}
+
+const std::map<int, std::string> &ServerConfig::getErrorPage() const
+{
+    return _errorPage;
+}
+
+void ServerConfig::setErrorPage(const std::vector<std::string> &values)
+{
+    std::vector<std::string> statusCode = values;
+    statusCode.pop_back();
+    std::string file = values[values.size() - 1];
+    for(size_t i = 0; i < statusCode.size(); i++)
+    {
+        size_t status = strtoul(statusCode[i].c_str(), NULL, 10);
+        _errorPage.insert(std::make_pair(status, file));
+    }
+    // print map
+    // for (std::map<int, std::string>::const_iterator it = _errorPage.begin(); it != _errorPage.end(); ++it)
+    // {
+    //     std::cout << "status: " << it->first << ", file: " << it->second << std::endl;
+    // }
 }
 
 const size_t &ServerConfig::getClientMaxBodySize() const
@@ -102,7 +128,7 @@ const std::vector<std::string> &ServerConfig::getIndex() const
     return _indexFiles;
 }
 
-void ServerConfig::setIndex(std::vector<std::string> index)
+void ServerConfig::setIndex(const std::vector<std::string> &index)
 {
     // combine the values if got duplicate index entry
     _indexFiles.insert(_indexFiles.end(), index.begin(), index.end());

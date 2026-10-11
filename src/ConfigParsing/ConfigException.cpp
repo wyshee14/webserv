@@ -30,6 +30,12 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
         case DUPLICATE_DIRECTIVE:
             _message = "Duplicate directive found: ";
             break;
+        case INVALID_STATUS_CODE:
+            _message = "Invalid status code: ";
+            break;
+        case MISCONFIGURED_ERROR_FILE:
+            _message = "Misconfigured error file. ";
+            break;
         default:
             _message = "Unknown configuration error: ";
             break;
