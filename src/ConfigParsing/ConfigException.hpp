@@ -11,12 +11,14 @@ class ConfigException : public std::exception {
     public:
         enum errorType {
             INVALID_FILE,
+            INVALID_DIRECTORY,
             UNEXPECTED_TOKEN,
             UNKNOWN_DIRECTIVE,
             WRONG_DIRECTIVE_CONTEXT,
-            INVLAID_DIRECTIVE_VALUES,
+            INVALID_DIRECTIVE_VALUES,
             INVALID_PORT_NUMBER,
             INVALID_IP_ADDRESS,
+            DUPLICATE_DIRECTIVE,
         };
         // dynamic message
         ConfigException(errorType err, const std::string &message = "");

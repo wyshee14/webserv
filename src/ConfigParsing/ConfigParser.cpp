@@ -115,7 +115,7 @@ bool ConfigParser::expectSymbol(TokenType type)
 {
     if (_current == _end || _current->type != type)
         return false;
-    // skip the braces
+    // skip the braces/semicolon
     ++_current;
     return true;
 }

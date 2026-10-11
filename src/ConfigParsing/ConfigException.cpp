@@ -6,6 +6,9 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
         case INVALID_FILE:
             _message = "Invalid configuration file: ";
             break;
+        case INVALID_DIRECTORY:
+            _message = "Invalid directory: ";
+            break;        
         case UNEXPECTED_TOKEN: 
             _message = "Unexpected token in config file: ";
             break;
@@ -15,7 +18,7 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
         case WRONG_DIRECTIVE_CONTEXT:
             _message = "Directive is is the wrong context: ";
             break;
-        case INVLAID_DIRECTIVE_VALUES:
+        case INVALID_DIRECTIVE_VALUES:
             _message = "Directive values are invalid: ";
             break;
         case INVALID_PORT_NUMBER:
@@ -23,6 +26,9 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
             break;
         case INVALID_IP_ADDRESS:
             _message = "Invalid IP address: ";
+            break;
+        case DUPLICATE_DIRECTIVE:
+            _message = "Duplicate directive found: ";
             break;
         default:
             _message = "Unknown configuration error: ";

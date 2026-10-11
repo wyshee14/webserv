@@ -2,6 +2,9 @@
 # include <map>
 # include "ConfigException.hpp"
 # include <stdlib.h>    // library for strtoul
+# include <sys/stat.h>
+#include <cerrno>
+#include <cstring>
 
 static bool isAllDigit(std::string &raw, unsigned long max)
 {
@@ -16,10 +19,11 @@ static bool isAllDigit(std::string &raw, unsigned long max)
     return true;
 }
 
+// define interface:port pairs - can have multiple values
 static void validateListen(const std::vector<std::string> &values)
 {
     if (values.size() != 1)
-        throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES);
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "listen");
     std::string address;
     std::string port;
     size_t separator = values[0].find(':');
@@ -35,7 +39,6 @@ static void validateListen(const std::vector<std::string> &values)
     }
     if (port.empty())
         throw ConfigException(ConfigException::INVALID_PORT_NUMBER);
-    std::cout << "address: " << address << ", port: " << port <<std::endl;
     std::vector<std::string> octets;
     size_t start = 0;
     size_t dot;
@@ -59,52 +62,56 @@ static void validateListen(const std::vector<std::string> &values)
         throw ConfigException(ConfigException::INVALID_PORT_NUMBER, port);
 }
 
-static void validateServerName(const std::vector<std::string> &values)
-{
-    if (values.size() != 1)
-        throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
-}
-
+// accepts exactly one path
 static void validateRoot(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-    throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+    if (values.size() != 1)
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "root");
+    
+    struct stat fileInfo;
+
+    // If the file path/directory exists at the path returns 0
+    if (stat(values[0].c_str(), &fileInfo) != 0) 
+        throw ConfigException(ConfigException::INVALID_DIRECTORY, values[0]);
+    // check if path exists but is not a directory
+    if (!S_ISDIR(fileInfo.st_mode))
+        throw ConfigException(ConfigException::INVALID_DIRECTORY, values[0]);
 }
 
 static void validateIndex(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-    throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
 }
 
 static void validateAutoindex(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-    throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
 }
 
 static void validateErrorPage(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-        throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
     }
 
     static void validateClientMaxBodySize(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-    throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
 }
 
 static void validateMethods(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-    throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
 }
 
 static void validateReturn(const std::vector<std::string> &values)
 {
     if (values.size() < 1)
-        throw ConfigException(ConfigException::INVLAID_DIRECTIVE_VALUES, values[0]);
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
     }
 
 typedef std::map<std::string, DirectiveRule> DirectiveMap;
@@ -114,7 +121,6 @@ static DirectiveMap createDirectiveRules()
     DirectiveMap rules;
 
     rules.insert(std::make_pair("listen", DirectiveRule(SERVER, validateListen)));
-    rules.insert(std::make_pair("server_name", DirectiveRule(SERVER, validateServerName)));
     rules.insert(std::make_pair("methods", DirectiveRule(LOCATION, validateMethods)));
     rules.insert(std::make_pair("root", DirectiveRule(ALL, validateRoot)));
     rules.insert(std::make_pair("index", DirectiveRule(ALL, validateIndex)));
@@ -132,8 +138,9 @@ void validateDirective(const Directive &directive, DirectiveContext context)
     DirectiveMap::iterator it = rules.find(directive.key);
     if (it == rules.end())
         throw ConfigException(ConfigException::UNKNOWN_DIRECTIVE, directive.key);
-    // get thevalue of the key found
+    // get the rule value of the key found
     const DirectiveRule &found = it->second;
+    // check the directive context is following the rule
     if (found.context != ALL && found.context != context)
         throw ConfigException(ConfigException::WRONG_DIRECTIVE_CONTEXT, directive.key);
     found.validate(directive.values);

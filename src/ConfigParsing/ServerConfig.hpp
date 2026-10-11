@@ -1,6 +1,7 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
+# include <iostream>
 # include <string>
 # include <vector>
 # include <map>
@@ -13,13 +14,15 @@
 class ServerConfig {
     private:
         std::vector<ListenDirective> _listenEndpoint;
-        // std::string _serverName;
         std::string _root;
         std::vector<std::string> _indexFiles;
         std::map<int, std::string> _errorPage;
         bool _autoindex;
         size_t _clientMaxBodySize;
         std::vector<LocationConfig> _locations;
+        bool _hasRoot;
+        bool _hasAutoindex;
+        bool _hasClientMaxBodySize;
 
     public:
         ServerConfig();
@@ -35,8 +38,8 @@ class ServerConfig {
         const LocationConfig* findLocation(const std::string &uri) const;
 
         // Setter
-        void setListenEndpoints(const std::vector<std::string> &values);
-        void setRoot();
+        void setListenEndpoints(const std::string &value);
+        void setRoot(const std::string &value);
 
         void addLocation(LocationConfig &location);
         void addDirectives(const Directive &directive);

@@ -20,26 +20,26 @@ const std::vector<Token> &ConfigFile::getTokens() const
     return _tokens;
 }
 
-bool ConfigFile::isFileExist() const
+bool isFileExist(const std::string &path)
 {
     // Structure which would store metadata
     struct stat fileInfo;
 
     // If the file path/directory exists at the path returns 0
-    if (stat(_path.c_str(), &fileInfo) != 0) 
+    if (stat(path.c_str(), &fileInfo) != 0) 
         return false;
     // returns boolean on path is a regular file; 0 is false(means is directory or others)
     if (!S_ISREG(fileInfo.st_mode))
         return false;
     // check if the file ends with .conf
-    if (_path.length() < 5 || _path.substr(_path.length() - 5) != ".conf")
+    if (path.length() < 5 || path.substr(path.length() - 5) != ".conf")
         return false;
     return true;
 }
 
-bool ConfigFile::openFile() const
+bool openFile(const std::string &path)
 {
-    std::ifstream file(_path.c_str());
+    std::ifstream file(path.c_str());
     if (!file.is_open())
     {
         std::cout << "Configuration file cannot be opened" << std::endl;
@@ -120,13 +120,8 @@ void ConfigFile::tokenize(std::string &line)
 
 void ConfigFile::processConfigFile()
 {
-    if (_path.empty())
-        throw std::runtime_error("Configuration path is empty");
-    if (!isFileExist())
+    if (_path.empty() || !isFileExist(getPath()) || !openFile(getPath()))
         throw (ConfigException(ConfigException::INVALID_FILE, getPath()));
-        // throw std::runtime_error("Configuration path is missing or is not a regular file: " + _path);
-    if (!openFile())
-        throw std::runtime_error("Configuration file failed to open");
     readLines();
     printTokens();
 }
