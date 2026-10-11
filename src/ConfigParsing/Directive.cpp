@@ -147,15 +147,33 @@ static void validateClientMaxBodySize(const std::vector<std::string> &values)
 
 static void validateMethods(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-    throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    if (values.empty())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "methods");
+    for (size_t i = 0; i < values.size(); i++)
+    {
+        if (values[i] != "GET" && values[i] != "POST" && values[i] != "DELETE")
+            throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "methods");
+    }
 }
 
+// [code] [path/url] 
 static void validateReturn(const std::vector<std::string> &values)
 {
-    if (values.size() < 1)
-        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
+    if (values.size() != 2 || values[0].empty() || values[1].empty())
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "return");
+    // check status code
+    for(size_t i = 0; i < values[0].length(); i++)
+    {
+        if (!std::isdigit(values[0][i]))
+            throw ConfigException(ConfigException::INVALID_STATUS_CODE, values[0]);
     }
+    unsigned long status = strtoul(values[0].c_str(), NULL, 10);
+    if (status < 300 || status > 308)
+        throw ConfigException(ConfigException::INVALID_STATUS_CODE, values[0]);
+    // check path
+    if (values[1][0] != '/')
+        throw ConfigException(ConfigException::INVALID_REDIRECT_PATH, values[1]);
+}
 
 typedef std::map<std::string, DirectiveRule> DirectiveMap;
 

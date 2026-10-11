@@ -21,6 +21,7 @@ class ConfigException : public std::exception {
             DUPLICATE_DIRECTIVE,
             INVALID_STATUS_CODE,
             MISCONFIGURED_ERROR_FILE,
+            INVALID_REDIRECT_PATH,
         };
         // dynamic message
         ConfigException(errorType err, const std::string &message = "");

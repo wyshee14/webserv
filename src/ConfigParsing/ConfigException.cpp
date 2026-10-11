@@ -36,6 +36,9 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
         case MISCONFIGURED_ERROR_FILE:
             _message = "Misconfigured error file. ";
             break;
+        case INVALID_REDIRECT_PATH:
+            _message = "Invalid redirect path: ";
+            break;
         default:
             _message = "Unknown configuration error: ";
             break;
