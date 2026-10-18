@@ -39,6 +39,9 @@ ConfigException::ConfigException(errorType err, const std::string &message) : _e
         case INVALID_REDIRECT_PATH:
             _message = "Invalid redirect path: ";
             break;
+        case INVALID_LOCATION_PATH:
+            _message = "Invalid location path: ";
+            break ;
         default:
             _message = "Unknown configuration error: ";
             break;

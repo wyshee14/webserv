@@ -79,14 +79,9 @@ void ServerConfig::setErrorPage(const std::vector<std::string> &values)
     std::string file = values[values.size() - 1];
     for(size_t i = 0; i < statusCode.size(); i++)
     {
-        size_t status = strtoul(statusCode[i].c_str(), NULL, 10);
+        int status = atoi(statusCode[i].c_str());
         _errorPage.insert(std::make_pair(status, file));
     }
-    // print map
-    // for (std::map<int, std::string>::const_iterator it = _errorPage.begin(); it != _errorPage.end(); ++it)
-    // {
-    //     std::cout << "status: " << it->first << ", file: " << it->second << std::endl;
-    // }
 }
 
 const size_t &ServerConfig::getClientMaxBodySize() const
@@ -107,7 +102,6 @@ void ServerConfig::setClientMaxBodySize(std::string value)
     else if (suffix == 'G')
         size *= 1000000000;
     _clientMaxBodySize = size;
-    std::cout << "client max body size: " << getClientMaxBodySize() << std::endl;
 }
 
 const bool &ServerConfig::getAutoindex() const
@@ -117,10 +111,8 @@ const bool &ServerConfig::getAutoindex() const
 
 void ServerConfig::setAutoindex(const std::string &value)
 {
-    if (value == "true")
+    if (value == "on")
         _autoindex = true;
-    else
-        _autoindex = false;
 }
 
 const std::vector<std::string> &ServerConfig::getIndex() const
@@ -132,12 +124,6 @@ void ServerConfig::setIndex(const std::vector<std::string> &index)
 {
     // combine the values if got duplicate index entry
     _indexFiles.insert(_indexFiles.end(), index.begin(), index.end());
-    // std::cout << "index: ";
-    // for (std::vector<std::string>::iterator it = _indexFiles.begin(); it != _indexFiles.end(); it++)
-    // {
-    //     std::cout << *it << " ";
-    // }
-    // std::cout << std::endl;
 }
 
 const std::string &ServerConfig::getRoot() const
@@ -170,8 +156,13 @@ void ServerConfig::setListenEndpoints(const std::string &value)
         address = value.substr(0, separator);
         port = value.substr(separator + 1);
     }
-    std::cout << "address: " << address << ", port: " << port <<std::endl;
     uint16_t portNumber = strtoul(port.c_str(), NULL, 10);
+    // Check listen endpoint are duplicates
+    for (std::vector<ListenDirective>::const_iterator it = _listenEndpoint.begin(); it != _listenEndpoint.end(); it++)
+    {
+        if (it->address == address && it->port == portNumber)
+            throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, value);
+    }
     _listenEndpoint.push_back(ListenDirective(address, portNumber));
 }
 

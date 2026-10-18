@@ -4,6 +4,7 @@
 # include <vector>
 # include "Token.hpp"
 # include "ServerConfig.hpp"
+# include "LocationConfig.hpp"
 # include "Directive.hpp"
 
 class ConfigParser {
@@ -25,5 +26,7 @@ class ConfigParser {
         bool expectSymbol(TokenType type);
 
 };
+
+void printAllConfiguration(const std::vector<ServerConfig> &servers);
 
 #endif

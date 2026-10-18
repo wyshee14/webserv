@@ -1,10 +1,7 @@
 # include "ConfigParser.hpp"
-# include "ServerConfig.hpp"
+# include "ConfigException.hpp"
 # include <stdexcept>
 # include <iostream>
-# include "ConfigException.hpp"
-# include "Directive.hpp"
-# include "ConfigParser.hpp"
 
 ConfigParser::ConfigParser(const std::vector<Token> &tokens) 
     : _tokens(tokens), _current(_tokens.begin()), _end(_tokens.end()){}
@@ -58,6 +55,8 @@ ServerConfig ConfigParser::parseServerBlock()
     }
     if (!expectSymbol(RBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
+    if (server.getListenEndpoint().empty())
+         server.setListenEndpoints("8080");
     return server;
 }
 
@@ -69,9 +68,11 @@ LocationConfig ConfigParser::parseLocationBlock()
     ++_current;
 
     // location must have path
-    if (_current != _end && _current->type != WORD)
-            throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
-    location.validatePath(_current->value);
+    if (_current == _end || _current->type != WORD)
+            throw ConfigException(
+                ConfigException::UNEXPECTED_TOKEN, 
+                _current == _end ? "end of file" : _current->value);
+    location.setPath(_current->value);
     ++_current;
 
     if (!expectSymbol(LBRACES))
@@ -118,4 +119,111 @@ bool ConfigParser::expectSymbol(TokenType type)
     // skip the braces/semicolon
     ++_current;
     return true;
+}
+
+// <-----TO BE REMOVED (FOR DEBUGGING PURPOSE ONLY)----->
+static void printStringVector(const std::vector<std::string> &values)
+{
+    for (std::vector<std::string>::const_iterator it = values.begin();
+         it != values.end(); ++it)
+    {
+        std::cout << *it << " ";
+    }
+}
+
+static void printErrorPages(const std::map<int, std::string> &errorPages,
+                            const std::string &indent)
+{
+    for (std::map<int, std::string>::const_iterator it = errorPages.begin();
+         it != errorPages.end(); ++it)
+    {
+        std::cout << indent << "error_page: "
+                  << it->first << " " << it->second << std::endl;
+    }
+}
+
+static void printLocationConfig(const LocationConfig &location)
+{
+    std::cout << "    location " << location.getPath() << " {" << std::endl;
+    std::cout << "        root: " << location.getRoot() << std::endl;
+
+    std::cout << "        index: ";
+    printStringVector(location.getIndex());
+    std::cout << std::endl;
+
+    std::cout << "        allowed_methods: ";
+    printStringVector(location.getAllowedMethods());
+    std::cout << std::endl;
+
+    std::cout << "        autoindex: "
+              << (location.getAutoindex() ? "true" : "false")
+              << std::endl;
+
+    std::cout << "        client_max_body_size: "
+              << location.getClientMaxBodySize()
+              << std::endl;
+
+    printErrorPages(location.getErrorPage(), "        ");
+
+    if (!location.getRedirectTarget().empty())
+    {
+        std::cout << "        redirect: "
+                  << location.getRedirectCode() << " "
+                  << location.getRedirectTarget()
+                  << std::endl;
+    }
+
+    std::cout << "    }" << std::endl;
+}
+
+void printAllConfiguration(const std::vector<ServerConfig> &servers)
+{
+    for (std::vector<ServerConfig>::const_iterator serverIt = servers.begin();
+         serverIt != servers.end(); ++serverIt)
+    {
+        const ServerConfig &server = *serverIt;
+
+        std::cout << "server {" << std::endl;
+
+        std::cout << "    listen: ";
+        const std::vector<ListenDirective> &listeners =
+            server.getListenEndpoint();
+
+        for (std::vector<ListenDirective>::const_iterator listenerIt =
+                 listeners.begin();
+             listenerIt != listeners.end(); ++listenerIt)
+        {
+            std::cout << listenerIt->address << ":"
+                      << listenerIt->port << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "    root: " << server.getRoot() << std::endl;
+
+        std::cout << "    index: ";
+        printStringVector(server.getIndex());
+        std::cout << std::endl;
+
+        std::cout << "    autoindex: "
+                  << (server.getAutoindex() ? "true" : "false")
+                  << std::endl;
+
+        std::cout << "    client_max_body_size: "
+                  << server.getClientMaxBodySize()
+                  << std::endl;
+
+        printErrorPages(server.getErrorPage(), "    ");
+
+        const std::vector<LocationConfig> &locations =
+            server.getLocations();
+
+        for (std::vector<LocationConfig>::const_iterator locationIt =
+                 locations.begin();
+             locationIt != locations.end(); ++locationIt)
+        {
+            printLocationConfig(*locationIt);
+        }
+
+        std::cout << "}" << std::endl;
+    }
 }

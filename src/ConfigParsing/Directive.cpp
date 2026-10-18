@@ -1,10 +1,10 @@
-# include "Directive.hpp"
+# include <iostream>
 # include <map>
-# include "ConfigException.hpp"
 # include <stdlib.h>    // library for strtoul
 # include <sys/stat.h>
+# include "Directive.hpp"
+# include "ConfigException.hpp"
 # include "ConfigFile.hpp"
-# include <iostream>
 
 static bool isAllDigit(const std::string &raw, unsigned long max)
 {
@@ -71,7 +71,7 @@ static void validateRoot(const std::vector<std::string> &values)
     struct stat fileInfo;
 
     // If the file path/directory exists at the path returns 0
-    if (stat(values[0].c_str(), &fileInfo) != 0) 
+    if (stat(values[0].c_str(), &fileInfo) != 0)
         throw ConfigException(ConfigException::INVALID_DIRECTORY, values[0]);
     // check if path exists but is not a directory
     if (!S_ISDIR(fileInfo.st_mode))
@@ -94,8 +94,8 @@ static void validateAutoindex(const std::vector<std::string> &values)
 {
     if (values.size() != 1)
         throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "autoindex");
-    if (values[0] != "true" && values[0] != "false")
-        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "autoindex");
+    if (values[0] != "on" && values[0] != "off")
+        throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[0]);
 }
 
 // [status_code](n) [error_file](1)
@@ -104,7 +104,8 @@ static void validateErrorPage(const std::vector<std::string> &values)
     std::vector<std::string> statusCode;
     if (values.empty())
         throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "error_page");
-    for (size_t i = 0; i < values.size(); i++)
+    // exclude the last one for file
+    for (size_t i = 0; i < values.size() - 1; i++)
     {
         for(size_t j = 0; j < values[i].length(); j++)
         {
@@ -152,7 +153,7 @@ static void validateMethods(const std::vector<std::string> &values)
     for (size_t i = 0; i < values.size(); i++)
     {
         if (values[i] != "GET" && values[i] != "POST" && values[i] != "DELETE")
-            throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, "methods");
+            throw ConfigException(ConfigException::INVALID_DIRECTIVE_VALUES, values[i]);
     }
 }
 
@@ -171,8 +172,11 @@ static void validateReturn(const std::vector<std::string> &values)
     if (status < 300 || status > 308)
         throw ConfigException(ConfigException::INVALID_STATUS_CODE, values[0]);
     // check path
-    if (values[1][0] != '/')
-        throw ConfigException(ConfigException::INVALID_REDIRECT_PATH, values[1]);
+    std::string path = values[1];
+    if (path[0] != '/')
+        throw ConfigException(ConfigException::INVALID_REDIRECT_PATH, path);
+    if (path.find_first_of(";,") != std::string::npos)
+		throw (ConfigException(ConfigException::INVALID_LOCATION_PATH, path));
 }
 
 typedef std::map<std::string, DirectiveRule> DirectiveMap;
@@ -182,13 +186,14 @@ static DirectiveMap createDirectiveRules()
     DirectiveMap rules;
 
     rules.insert(std::make_pair("listen", DirectiveRule(SERVER, validateListen)));
-    rules.insert(std::make_pair("methods", DirectiveRule(LOCATION, validateMethods)));
+    rules.insert(std::make_pair("allowed_methods", DirectiveRule(LOCATION, validateMethods)));
     rules.insert(std::make_pair("root", DirectiveRule(ALL, validateRoot)));
     rules.insert(std::make_pair("index", DirectiveRule(ALL, validateIndex)));
     rules.insert(std::make_pair("autoindex", DirectiveRule(ALL, validateAutoindex)));
     rules.insert(std::make_pair("error_page", DirectiveRule(ALL, validateErrorPage)));
     rules.insert(std::make_pair("client_max_body_size", DirectiveRule(ALL, validateClientMaxBodySize)));
-    rules.insert(std::make_pair("return", DirectiveRule(ALL, validateReturn)));
+    // return is available in all blocks, but for this project set explicitly to location only
+    rules.insert(std::make_pair("return", DirectiveRule(LOCATION, validateReturn)));
 
     return rules;
 }

@@ -123,5 +123,5 @@ void ConfigFile::processConfigFile()
     if (_path.empty() || !isFileExist(getPath()) || !openFile(getPath()))
         throw (ConfigException(ConfigException::INVALID_FILE, getPath()));
     readLines();
-    printTokens();
+    // printTokens();
 }
