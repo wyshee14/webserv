@@ -8,7 +8,7 @@ Webserv::Webserv(const std::string &configPath)
     config.processConfigFile();
     ConfigParser parser(config.getTokens());
     _servers = parser.parseTokens();
-    printAllConfiguration(_servers);
+    // printAllConfiguration(_servers);
 }
 
 Webserv::~Webserv() {}

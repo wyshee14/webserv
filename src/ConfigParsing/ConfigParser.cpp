@@ -12,6 +12,8 @@ std::vector<ServerConfig> ConfigParser::parseTokens()
 {
     std::vector<ServerConfig> servers;     // an array of server block
 
+    if (_tokens.empty())
+        throw ConfigException(ConfigException::UNEXPECTED_TOKEN);
     // check if the token is nothing
     if (_current == _end)
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
