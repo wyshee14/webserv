@@ -1,5 +1,6 @@
 #include "ListenSocket.hpp"
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <cstdlib>
 #include <unistd.h>
@@ -50,6 +51,16 @@ int ListenSocket::socketSetup() {
 		return (50);
 	}
 	return (25);
+}
+
+int ListenSocket::Multiplexing() {
+	int epollfd = epoll_create(10);
+	if (epollfd == -1)
+	{
+		std::cerr << "epoll creation failed\n";
+		return (1);
+	}
+	epoll_ctl(epollfd, EPOLL_CTL_ADD, );
 }
 
 ListenSocket::~ListenSocket() {

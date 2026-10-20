@@ -11,6 +11,7 @@ class ListenSocket {
 	public:
 		ListenSocket();
 		int socketSetup();
+		int Multiplexing();
 		~ListenSocket();
 		// std::vector<int> getFds();
 };
