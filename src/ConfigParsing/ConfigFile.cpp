@@ -26,7 +26,7 @@ bool isFileExist(const std::string &path)
     struct stat fileInfo;
 
     // If the file path/directory exists at the path returns 0
-    if (stat(path.c_str(), &fileInfo) != 0) 
+    if (stat(path.c_str(), &fileInfo) != 0)
         return false;
     // returns boolean on path is a regular file; 0 is false(means is directory or others)
     if (!S_ISREG(fileInfo.st_mode))

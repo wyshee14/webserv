@@ -1,4 +1,4 @@
-#ifndef CONFIGEXCEPT_HPP
+#ifndef CONFIGEXCEPTION_HPP
 # define CONFIGEXCEPTION_HPP
 
 # include <exception>
@@ -7,7 +7,7 @@
 #define RESET "\033[0m"
 #define RED "\033[31m"
 
-class ConfigException : public std::exception {    
+class ConfigException : public std::exception {
     public:
         enum errorType {
             INVALID_FILE,
@@ -32,7 +32,7 @@ class ConfigException : public std::exception {
     private:
         errorType _error;
         std::string _message;
-    
+
 };
 
 #endif

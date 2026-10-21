@@ -28,5 +28,6 @@ class ConfigParser {
 };
 
 void printAllConfiguration(const std::vector<ServerConfig> &servers);
+void validateAllServersListenEndpoints(std::vector<ServerConfig> servers);
 
 #endif

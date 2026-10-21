@@ -2,7 +2,7 @@
 # include "ConfigException.hpp"
 # include <cstdlib> // library for atoi
 
-LocationConfig::LocationConfig() 
+LocationConfig::LocationConfig()
 {
 	_autoindex = false;
     _clientMaxBodySize = 1000000;       // Default 1 megabyte

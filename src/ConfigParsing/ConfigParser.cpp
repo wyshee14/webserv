@@ -2,8 +2,9 @@
 # include "ConfigException.hpp"
 # include <stdexcept>
 # include <iostream>
+# include <set>
 
-ConfigParser::ConfigParser(const std::vector<Token> &tokens) 
+ConfigParser::ConfigParser(const std::vector<Token> &tokens)
     : _tokens(tokens), _current(_tokens.begin()), _end(_tokens.end()){}
 
 ConfigParser::~ConfigParser() {}
@@ -38,7 +39,7 @@ ServerConfig ConfigParser::parseServerBlock()
 
     if (!expectSymbol(LBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
-    
+
     while (_current != _end && _current->type != RBRACES)
     {
         if (_current->type != WORD)
@@ -72,14 +73,14 @@ LocationConfig ConfigParser::parseLocationBlock()
     // location must have path
     if (_current == _end || _current->type != WORD)
             throw ConfigException(
-                ConfigException::UNEXPECTED_TOKEN, 
+                ConfigException::UNEXPECTED_TOKEN,
                 _current == _end ? "end of file" : _current->value);
     location.setPath(_current->value);
     ++_current;
 
     if (!expectSymbol(LBRACES))
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
-    
+
     while (_current != _end && _current->type != RBRACES)
     {
         if (_current->type != WORD)
@@ -96,7 +97,7 @@ LocationConfig ConfigParser::parseLocationBlock()
     return location;
 }
 
-Directive ConfigParser::parseDirectives() 
+Directive ConfigParser::parseDirectives()
 {
     if (_current == _end || _current->type != WORD)
         throw ConfigException(ConfigException::UNEXPECTED_TOKEN, _current->value);
@@ -227,5 +228,21 @@ void printAllConfiguration(const std::vector<ServerConfig> &servers)
         }
 
         std::cout << "}" << std::endl;
+    }
+}
+
+void validateAllServersListenEndpoints(std::vector<ServerConfig> servers)
+{
+    // set does not allows duplicate
+    std::set<ListenDirective> endpoints;
+
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+        const std::vector<ListenDirective> &listen = servers[i].getListenEndpoint();
+        for (size_t j = 0; j < listen.size(); ++j)
+        {
+            if (!endpoints.insert(listen[j]).second)
+                throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE);
+        }
     }
 }
