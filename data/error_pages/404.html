@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 480px;
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        h1 {
+            font-size: 72px;
+            font-weight: 800;
+            color: #2563eb;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        p {
+            font-size: 15px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>404</h1>
+        <h2>Page Not Found</h2>
+        <p>Sorry, the page you are looking for doesn't exist or has been moved.</p>
+        <a href="/" class="btn">Back to Home</a>
+    </div>
+
+</body>
+</html>
+
+<!-- 
+=====================================================
+ NGINX Integration Instructions:
+=====================================================
+1. Save this file on your server (e.g., /var/www/mysite/404.html).
+2. Open your NGINX config file:
+   sudo nano /etc/nginx/conf.d/mysite.conf
+
+3. Add the following directives inside your server block:
+
+   server {
+       ...
+       error_page 404 /404.html;
+
+       location = /404.html {
+           root /var/www/mysite;
+           internal;
+       }
+       ...
+   }
+
+4. Reload NGINX:
+   sudo service nginx reload
+-->
