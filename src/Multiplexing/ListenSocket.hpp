@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#define MAX_VALUE 10
+
 class ListenSocket {
 	private:
 		std::vector<int> fds;
@@ -11,7 +13,7 @@ class ListenSocket {
 	public:
 		ListenSocket();
 		int socketSetup();
-		int Multiplexing();
+		int Multiplexing(int listensocket);
 		~ListenSocket();
 		// std::vector<int> getFds();
 };
