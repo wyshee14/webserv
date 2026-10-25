@@ -1,6 +1,6 @@
 # include "Webserv.hpp"
-# include "ConfigFile.hpp"
-# include "ConfigParser.hpp"
+# include "ConfigParsing/ConfigFile.hpp"
+# include "ConfigParsing/ConfigParser.hpp"
 
 Webserv::Webserv(const std::string &configPath)
 {
@@ -8,8 +8,8 @@ Webserv::Webserv(const std::string &configPath)
     config.processConfigFile();
     ConfigParser parser(config.getTokens());
     _servers = parser.parseTokens();
-    printAllConfiguration(_servers);
 	validateAllServersListenEndpoints(_servers);
+    // printAllConfiguration(_servers);
 }
 
 Webserv::~Webserv() {}

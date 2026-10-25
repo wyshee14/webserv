@@ -40,6 +40,14 @@ struct ListenDirective
     uint16_t port;          // port must be number from 0-65535
 
     ListenDirective(const std::string &address, uint16_t port) : address(address), port(port) {}
+
+    // to compare the added element with the previous one is the same
+    bool operator<(const ListenDirective &other) const
+    {
+        if (address != other.address)
+            return address < other.address;
+        return port < other.port;
+    }
 };
 
 #endif

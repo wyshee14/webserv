@@ -231,7 +231,7 @@ void printAllConfiguration(const std::vector<ServerConfig> &servers)
     }
 }
 
-void validateAllServersListenEndpoints(std::vector<ServerConfig> servers)
+void validateAllServersListenEndpoints(const std::vector<ServerConfig> &servers)
 {
     // set does not allows duplicate
     std::set<ListenDirective> endpoints;
@@ -241,8 +241,11 @@ void validateAllServersListenEndpoints(std::vector<ServerConfig> servers)
         const std::vector<ListenDirective> &listen = servers[i].getListenEndpoint();
         for (size_t j = 0; j < listen.size(); ++j)
         {
+            // set.insert returns a std::pair<iterator, bool>
+            // .second if true means it was inserted, if false means not inserted (already exist)
+            // std::less operator overloading < to search its ordered tree
             if (!endpoints.insert(listen[j]).second)
-                throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE);
+                throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, "listen in different server block");
         }
     }
 }
