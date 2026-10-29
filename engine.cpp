@@ -42,23 +42,23 @@ std::string process(request request)
 std::string process_get(const std::string &root, const std::string &path, const std::string &loc, const std::vector<std::string> &index, int autoindex)
 {
     std::string part;
-    std::string filepath;
+    std::string file;
 
     if (loc == "/")
         part = path;
     else
         part = path.substr(loc.size());
 
-    filepath = root + part;
+    file = root + part;
 
-    if (!have(filepath))
+    if (!have(file))
         return err(404);
 
-    if (dir(filepath))
+    if (dir(file))
     {
         for (size_t i = 0; i < index.size(); i++)
         {
-            std::string indexpath = filepath;
+            std::string indexpath = file;
 
             if (!indexpath.empty() && indexpath[indexpath.size() - 1] != '/')
             {
@@ -92,21 +92,21 @@ std::string process_get(const std::string &root, const std::string &path, const 
         }
 
         if (autoindex)
-            return generate(filepath, path);
+            return generate(file, path);
 
         return err(403);
     }
 
-    if (!check_file(filepath))
+    if (!check_file(file))
         return err(403);
 
-    std::string body = read_file(filepath);
+    std::string body = read_file(file);
 
     if (body.empty())
     {
         struct stat st;
 
-        if (stat(filepath.c_str(), &st) != 0 ||
+        if (stat(file.c_str(), &st) != 0 ||
             st.st_size != 0)
         {
             return err(500);
@@ -119,22 +119,22 @@ std::string process_get(const std::string &root, const std::string &path, const 
 std::string process_delete(const std::string &root, const std::string &path, const std::string &loc)
 {
     std::string part;
-    std::string filepath;
+    std::string file;
 
     if (loc == "/")
         part = path;
     else
         part = path.substr(loc.size());
 
-    filepath = root + part;
+    file = root + part;
 
-    if (!have(filepath))
+    if (!have(file))
         return err(404);
 
-    if (dir(filepath))
+    if (dir(file))
         return err(403);
 
-    if (remove_file(filepath))
+    if (remove_file(file))
         return err(500);
 
     return resp(204, "No Content", "", "", "");
