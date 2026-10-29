@@ -5,13 +5,13 @@
 # include "ListenSocket.hpp"
 # include "Multiplexer.hpp"
 
-class EventLoop {
+class EventLoop : MasterProcess {
     private:
-        std::vector<ListenSocket> lsocs; //how do you relate listensocket fd to epoll
+        // std::vector<ListenSocket> lsocs; //how do you relate listensocket fd to epoll
         Multiplexer EventManager;
     public:
         EventLoop();
-        void Socketsbuilder(); //set up listening sockets to create a steady listening connection to the port
+		void CoreMechanic();
         ~EventLoop();
 };
 
