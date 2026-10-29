@@ -1,131 +1,176 @@
-std::string get(std::string b, std::string path, std::string c, std::string i, int a)
+std::string process(request request)
 {
-	std::string part;
-	std::string p;
+    std::string path = request.get_path();
+    std::string method = request.get_method();
 
-	if (c == "/")
-		part = path;
-	else
-		part = path.substr(c.size());
+    if (request.get_error())
+        return err(request.err());
 
-	p = b + part;
+    const LocationConfig *loc = s.findLocation(path);
 
-	if (!have(p))
+    if (loc == NULL)
+        return err(404);
+
+    if (!loc->getRedirectTarget().empty())
+        return add_loc(loc->getRedirectTarget());
+
+	if (check_method(loc->getAllowedMethods(), method))
 	{
-		return err(404);
+		std::string body = get_body("405 Method Not Allowed");
+
+		return resp(405, "Method Not Allowed", body, "", get_methods(loc->getAllowedMethods()));
 	}
 
-	if (dir(p))
-	{
-		if (!i.empty())
-		{
-			std::string r = p + "/" + i;
-
-			if (regular_file(r))
-			{
-				std::string body = read_file(r);
-
-				return resp(200, "OK", body, "");
-			}
-		}
-
-		if (a)
-		{
-			return generate(p, path);
-		}
-
-		return err(403);
-	}
-
-	if (!regular_file(p))
-	{
-		return err(403);
-	}
-
-	if (access(p.c_str(), R_OK) != 0)
-	{
-		return err(403);
-	}
-
-	std::string body = read_file(p);
-
-	return resp(200, "OK", body, "");
-}
-
-std::string delete(std::string b, std::string path, std::string c)
-{
-	std::string part;
-	std::string p;
-
-	if (c == "/")
-		part = path;
-	else
-		part = path.substr(c.size());
-
-	p = b + part;
-
-	if (!have(p))
-	{
-		return err(404);
-	}
-
-	if (dir(p))
-	{
-		return err(403);
-	}
-
-	if (remove_file(p))
-	{
-		return err(500);
+    if (method == "GET")
+    {
+        return process_get(loc->getRoot(), path, loc->getPath(), loc->getIndex(), loc->getAutoindex());
     }
 
-	return resp(204, "No Content", "", "");
+    if (method == "DELETE")
+    {
+        return process_delete(loc->getRoot(), path, loc->getPath());
+    }
+
+    if (method == "POST")
+    {
+        return process_post(path, loc->getUploadDirectory(), request.get_body());
+    }
+
+    return err(501);
 }
 
-std::string generate(std::string path, std::string url)
+std::string process_get(const std::string &root, const std::string &path, const std::string &loc, const std::vector<std::string> &index, int autoindex)
 {
-	DIR *dir;
-	struct dirent *entry;
-	std::string name;
-	std::string href;
-	std::string body;
+    std::string part;
+    std::string filepath;
 
-	dir = opendir(path.c_str());
-	if (!dir)
-	{
-		if (errno == EACCES)
-			return err(403);
-		if (errno == ENOENT)
-			return err(404);
-		return err(500);
-	}
+    if (loc == "/")
+        part = path;
+    else
+        part = path.substr(loc.size());
 
-	body = "<html><body>\n";
-	body += "<h1>Index of ";
-	body += url;
-	body += "</h1>\n";
+    filepath = root + part;
 
-	while ((entry = readdir(dir)) != NULL)
-	{
-		name = entry->d_name;
+    if (!have(filepath))
+        return err(404);
 
-		if (name == "." || name == "..")
-			continue;
+    if (dir(filepath))
+    {
+        for (size_t i = 0; i < index.size(); i++)
+        {
+            std::string indexpath = filepath;
 
-		href = url;
+            if (!indexpath.empty() && indexpath[indexpath.size() - 1] != '/')
+            {
+                indexpath += "/";
+            }
 
-		if (href.empty() || href[href.size() - 1] != '/')
-			href += "/";
+            indexpath += index[i];
 
-		href += name;
-		body += "<a href=\"";
-		body += href;
-		body += "\">";
-		body += name;
-		body += "</a><br>\n";
-	}
+            if (!have(indexpath))
+                continue;
 
-	closedir(dir);
-	body += "</body></html>\n";
-	return resp(200, "OK", body, "");
+            if (!regular_file(indexpath))
+                continue;
+
+            if (!check_file(indexpath))
+                return err(403);
+
+            std::string body = read_file(indexpath);
+
+            if (body.empty())
+            {
+                struct stat st;
+
+                if (stat(indexpath.c_str(), &st) != 0 || st.st_size != 0)
+                {
+                    return err(500);
+                }
+            }
+
+            return resp(200, "OK", body, "", "");
+        }
+
+        if (autoindex)
+            return generate(filepath, path);
+
+        return err(403);
+    }
+
+    if (!check_file(filepath))
+        return err(403);
+
+    std::string body = read_file(filepath);
+
+    if (body.empty())
+    {
+        struct stat st;
+
+        if (stat(filepath.c_str(), &st) != 0 ||
+            st.st_size != 0)
+        {
+            return err(500);
+        }
+    }
+
+    return resp(200, "OK", body, "", "");
+}
+
+std::string process_delete(const std::string &root, const std::string &path, const std::string &loc)
+{
+    std::string part;
+    std::string filepath;
+
+    if (loc == "/")
+        part = path;
+    else
+        part = path.substr(loc.size());
+
+    filepath = root + part;
+
+    if (!have(filepath))
+        return err(404);
+
+    if (dir(filepath))
+        return err(403);
+
+    if (remove_file(filepath))
+        return err(500);
+
+    return resp(204, "No Content", "", "", "");
+}
+
+std::string process_post(const std::string &path, const std::string &dir, const std::string &body)
+{
+    std::string file;
+    std::string dst;
+    size_t i;
+
+    if (dir.empty())
+        return err(500);
+
+    if (path.empty())
+        return err(400);
+
+    i = path.size();
+
+    while (i > 0 && path[i - 1] != '/')
+        --i;
+
+    file = path.substr(i);
+
+    if (file.empty())
+        return err(400);
+
+    dst = dir;
+
+    if (dst[dst.size() - 1] != '/')
+        dst += "/";
+
+    dst += file;
+
+    if (!write_file(dst, body))
+        return err(500);
+
+    return resp(201, "Created", "", "", "");
 }
