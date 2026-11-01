@@ -16,6 +16,7 @@ class ListenSocket {
 		int			lsfd;
 	public:
 		ListenSocket(int Port);
+		ListenSocket(const ListenSocket& object);
 		void socketSetup();
 		int GetPortNum();
 		int Getlsfd();

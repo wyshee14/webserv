@@ -1,26 +1,31 @@
 #include "MasterProcess.hpp"
 
 MasterProcess::MasterProcess() : port(8000) {
-	std::cout << "MasterProcess object constructed" << std::endl;
+	std::cout << "MasterProcess Object created" << std::endl;
 }
 
 void MasterProcess::SocketBuilder(size_t quant) {
+	// std::cout << lsocs.capacity() << std::endl;
+	// std::cout << lsocs.capacity() << std::endl;
 	for (size_t i = 0; i < quant; i++)
 	{
+		std::cout << lsocs.size() << std::endl;
 		lsocs.push_back(ListenSocket(port));
+		std::cout << "buffering..." << std::endl;
 	}
+	std::cout << "paused in the middle" << std::endl;
 	for (size_t i = 0; i < lsocs.size(); i++)
 	{
 		lsocs[i].socketSetup();
 	}
 }
 
-std::vector<ListenSocket> & MasterProcess::getlsocs() {
+std::vector<ListenSocket>& MasterProcess::getlsocs() {
 	return (this->lsocs);
 }
 
 MasterProcess::~MasterProcess() {
-	std::cout << "MasterPRocess object deconstructed" << std::endl;
+	std::cout << "MasterProcess Object deconstructed" << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -31,6 +36,8 @@ int main(int argc, char **argv)
 		MasterProcess master;
 
 		master.SocketBuilder(quant);
+
+		std::cout << master.getlsocs().size() << "  i am moving on from socketbuilder" << std::endl;
 		std::vector<ListenSocket> &lsock = master.getlsocs();
 		for (size_t i = 0; i < lsock.size(); i++)
 		{

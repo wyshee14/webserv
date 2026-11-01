@@ -4,9 +4,20 @@ ListenSocket::ListenSocket(int Port) : PortNum(Port) {
 	std::cout << "ListenSocket Object created" << std::endl;
 }
 
+ListenSocket::ListenSocket(const ListenSocket& object) {
+	
+	std::cout << "ListenSocket copy constructor called" << std::endl;
+	this->PortNum = object.PortNum;
+	this->SockInfo = object.SockInfo;
+	this->lsfd = object.lsfd;
+}
+
 void ListenSocket::socketSetup() {
 
 	this->lsfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); //create a socket
+
+	std::cout << "socket successfully created" << std::endl;
+
 	if(this->lsfd >= 0)
 	{
 		SockInfo.sin_family = AF_INET; // what family type of data is using (IPV4)
