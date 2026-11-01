@@ -1,6 +1,6 @@
 #include "ListenSocket.hpp"
 
-ListenSocket::ListenSocket(int Port) : PortNum(Port) {
+ListenSocket::ListenSocket(int Port) : PortNum(Port), lsfd(0) {
 	std::cout << "ListenSocket Object created" << std::endl;
 }
 
@@ -45,7 +45,12 @@ int ListenSocket::GetPortNum() {
 	return (this->PortNum);
 }
 
+int ListenSocket::Getlsfd() {
+	return (this->lsfd);
+}
+
 ListenSocket::~ListenSocket() {
+	close (this->lsfd);
 	std::cout << "ListenSocket Object destroyed" << std::endl;
 }
 

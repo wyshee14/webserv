@@ -8,11 +8,13 @@
 
 class MasterProcess {
 	private:
-		int port;
+		std::vector<ListenDirective> config;
     protected:
         std::vector<ListenSocket> lsocs; //how do you relate listensocket fd to epoll
     public:
-        MasterProcess(); //
+        MasterProcess();
+		MasterProcess(const std::vector<ServerConfig>& obj);
+		void ParseEndpoint(); // write a double for loop to parse listen endpoint
 		void SocketBuilder(size_t quant);
 		std::vector<ListenSocket> &getlsocs();
         ~MasterProcess();

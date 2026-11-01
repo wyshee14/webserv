@@ -1,16 +1,21 @@
 #include "MasterProcess.hpp"
 
-MasterProcess::MasterProcess() : port(8000) {
+MasterProcess::MasterProcess() {
 	std::cout << "MasterProcess Object created" << std::endl;
+}
+
+MasterProcess::MasterProcess(const std::vector<ServerConfig>& obj) {
+	this->config = obj;
 }
 
 void MasterProcess::SocketBuilder(size_t quant) {
 	// std::cout << lsocs.capacity() << std::endl;
+	lsocs.reserve(quant);
 	// std::cout << lsocs.capacity() << std::endl;
 	for (size_t i = 0; i < quant; i++)
 	{
 		std::cout << lsocs.size() << std::endl;
-		lsocs.push_back(ListenSocket(port));
+		lsocs.push_back(ListenSocket(port + i));
 		std::cout << "buffering..." << std::endl;
 	}
 	std::cout << "paused in the middle" << std::endl;
