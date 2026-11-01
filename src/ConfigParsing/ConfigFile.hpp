@@ -19,12 +19,13 @@ class ConfigFile {
         const std::string &getPath() const;
         const std::vector<Token> &getTokens() const;
         void printTokens() const;
-        bool isFileExist() const;
-        bool openFile() const;
         void readLines();
         void removeComments(std::string &line);
         void tokenize(std::string &line);
         void processConfigFile();
-};
+    };
+
+bool isFileExist(const std::string &path);
+bool openFile(const std::string &path);
 
 #endif

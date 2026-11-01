@@ -2,10 +2,8 @@
 # define WEBSERV_HPP
 
 # include <vector>
-# include <iostream>
-# include "Token.hpp"
-# include "ServerConfig.hpp" 
-# include "LocationConfig.hpp" 
+# include "ConfigParsing/ServerConfig.hpp" 
+# include "ConfigParsing/LocationConfig.hpp" 
 
 class Webserv {
 	private:

@@ -5,8 +5,8 @@ CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address
 
 SRC = src/main.cpp \
+	  src/Webserv.cpp \
 	  src/ConfigParsing/ConfigFile.cpp \
-	  src/ConfigParsing/Webserv.cpp \
 	  src/ConfigParsing/ConfigException.cpp \
 	  src/ConfigParsing/ConfigParser.cpp \
 	  src/ConfigParsing/Directive.cpp \
