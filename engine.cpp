@@ -41,15 +41,9 @@ std::string process(request request)
 
 std::string process_get(const std::string &root, const std::string &path, const std::string &loc, const std::vector<std::string> &index, int autoindex)
 {
-    std::string part;
     std::string file;
 
-    if (loc == "/")
-        part = path;
-    else
-        part = path.substr(loc.size());
-
-    file = root + part;
+    file = root + path;
 
     if (!have(file))
         return err(404);
@@ -118,15 +112,9 @@ std::string process_get(const std::string &root, const std::string &path, const 
 
 std::string process_delete(const std::string &root, const std::string &path, const std::string &loc)
 {
-    std::string part;
     std::string file;
 
-    if (loc == "/")
-        part = path;
-    else
-        part = path.substr(loc.size());
-
-    file = root + part;
+    file = root + path;
 
     if (!have(file))
         return err(404);
