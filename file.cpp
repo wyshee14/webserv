@@ -67,10 +67,7 @@ std::string generate(std::string path, std::string url)
 		return err(500);
 	}
 
-	body = "<html><body>\n";
-	body += "<h1>Index of ";
-	body += url;
-	body += "</h1>\n";
+	body = "<html><body>\n<h1>Index of " + url + "</h1>\n";
 
 	while ((entry = readdir(dir)) != NULL)
 	{
@@ -79,17 +76,8 @@ std::string generate(std::string path, std::string url)
 		if (name == "." || name == "..")
 			continue;
 
-		href = url;
-
-		if (href.empty() || href[href.size() - 1] != '/')
-			href += "/";
-
-		href += name;
-		body += "<a href=\"";
-		body += href;
-		body += "\">";
 		body += name;
-		body += "</a><br>\n";
+		body += "<br>\n";
 	}
 
 	closedir(dir);
