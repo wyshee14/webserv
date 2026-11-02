@@ -4,8 +4,9 @@
 # include <iostream>
 # include "ListenSocket.hpp"
 # include "Multiplexer.hpp"
+# include "MasterProcess.hpp"
 
-class EventLoop : MasterProcess {
+class EventLoop : public MasterProcess {
     private:
         // std::vector<ListenSocket> lsocs; //how do you relate listensocket fd to epoll
         Multiplexer EventManager;

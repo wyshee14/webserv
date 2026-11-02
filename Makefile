@@ -2,7 +2,7 @@ NAME = webserv
 
 CC = c++
 
-CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -g -std=c++98 #-fsanitize=address
 
 SRC = src/main.cpp \
 	  src/Webserv.cpp \
@@ -11,7 +11,8 @@ SRC = src/main.cpp \
 	  src/ConfigParsing/ConfigParser.cpp \
 	  src/ConfigParsing/Directive.cpp \
 	  src/ConfigParsing/ServerConfig.cpp \
-	  src/ConfigParsing/LocationConfig.cpp 
+	  src/ConfigParsing/LocationConfig.cpp \
+	  src/EventLoop/MasterProcess.cpp src/EventLoop/ListenSocket.cpp 
 
 OBJ = $(SRC:.cpp=.o)
 

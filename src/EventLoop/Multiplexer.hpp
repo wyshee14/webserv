@@ -19,7 +19,7 @@ class Multiplexer {
         std::vector<int>            clientfds; //map container to map clientfd to sockaddr_in struct ?
     public:
         Multiplexer();
-        int Multiplexing(int listensocket);
+        int Multiplexing(int listensocket); //!isolate epoll creation and add listensockets to epoll interest list
         ~Multiplexer();
 };
 

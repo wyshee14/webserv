@@ -1,5 +1,6 @@
 # include <iostream>
 # include "Webserv.hpp"
+# include "EventLoop/MasterProcess.hpp"
 
 int main(int ac, char **av)
 {
@@ -12,6 +13,8 @@ int main(int ac, char **av)
     try
     {
         Webserv server(path);
+		MasterProcess factory(server.getServers());
+		factory.SocketBuilder();
     }
     catch(const std::exception& e)
     {
