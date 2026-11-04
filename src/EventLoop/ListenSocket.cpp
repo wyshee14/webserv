@@ -72,7 +72,7 @@ int ListenSocket::GetPortNum() {
 	return (this->portNum);
 }
 
-int ListenSocket::Getlsfd() {
+int ListenSocket::Getlsfd() const {
 	return (this->lsfd);
 }
 

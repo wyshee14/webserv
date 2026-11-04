@@ -12,8 +12,8 @@ class EventLoop : public MasterProcess {
         Multiplexer EventManager;
     public:
         EventLoop();
-		void CoreMechanic();
+		void coreMechanic();
         ~EventLoop();
 };
 
-#endif
+#endif  

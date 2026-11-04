@@ -3,23 +3,27 @@
 
 # include <iostream>
 # include <vector>
+# include <map>
 # include <sys/epoll.h>
 # include <sys/socket.h>
 # include <stdlib.h>
 # include <unistd.h>
 # include <netinet/in.h>
+# include "ListenSocket.hpp"
 
 #define MAX_VALUE 10
 
 class Multiplexer {
     private:
-        int                         epollfd;
-        epoll_event                 ev;
-        epoll_event                 events[MAX_VALUE];
-        std::vector<int>            clientfds; //map container to map clientfd to sockaddr_in struct ?
+        std::map<int, std::vector<int>>   listSocks;
+        int                                         epollfd;
+        epoll_event                                 ev;
+        epoll_event                                 events[MAX_VALUE];
     public:
-        Multiplexer();
-        int Multiplexing(int listensocket); //!isolate epoll creation and add listensockets to epoll interest list
+        Multiplexer(const std::vector<ListenSocket>&  ltsocks);
+        void epollCreation();
+        void addlsToEpoll();
+        void fdManagement();
         ~Multiplexer();
 };
 

@@ -18,12 +18,14 @@ class ListenSocket {
 		std::string	IPAddr;
 		sockaddr_in	sockInfo;
 		int			lsfd;
+		std::vector<int> clientfds;
+		
 	public:
 		ListenSocket(int Port, std::string IPAddr);
 		ListenSocket(const ListenSocket& object);
 		void socketSetup();
 		int GetPortNum();
-		int Getlsfd();
+		int Getlsfd() const;
 		sockaddr_in GetSockInfo();
 		~ListenSocket();
 };
