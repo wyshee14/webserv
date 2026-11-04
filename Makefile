@@ -12,7 +12,8 @@ SRC = src/main.cpp \
 	  src/ConfigParsing/Directive.cpp \
 	  src/ConfigParsing/ServerConfig.cpp \
 	  src/ConfigParsing/LocationConfig.cpp \
-	  src/EventLoop/MasterProcess.cpp src/EventLoop/ListenSocket.cpp 
+	  src/EventLoop/MasterProcess.cpp src/EventLoop/ListenSocket.cpp \
+	  src/EventLoop/Multiplexer.cpp
 
 OBJ = $(SRC:.cpp=.o)
 

@@ -15,6 +15,8 @@ int main(int ac, char **av)
         Webserv server(path);
 		MasterProcess factory(server.getServers());
 		factory.SocketBuilder();
+		Multiplexer event(factory.getlsocs());
+		event.eventLoop();
     }
     catch(const std::exception& e)
     {

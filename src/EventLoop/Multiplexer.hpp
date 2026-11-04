@@ -9,21 +9,22 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <netinet/in.h>
+# include <fcntl.h>
 # include "ListenSocket.hpp"
 
 #define MAX_VALUE 10
 
 class Multiplexer {
     private:
-        std::map<int, std::vector<int>>   listSocks;
+        std::map<int, std::vector<int> >   listSocks;
         int                                         epollfd;
         epoll_event                                 ev;
         epoll_event                                 events[MAX_VALUE];
     public:
-        Multiplexer(const std::vector<ListenSocket>&  ltsocks);
+        Multiplexer(const std::vector<ListenSocket>& ltsocks);
         void epollCreation();
         void addlsToEpoll();
-        void fdManagement();
+        void eventLoop();
         ~Multiplexer();
 };
 
