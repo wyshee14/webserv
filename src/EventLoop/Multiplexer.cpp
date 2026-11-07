@@ -38,7 +38,7 @@ void Multiplexer::addlsToEpoll() {
 	{
 		const int &listensocket = it->first;
 		ev.data.fd = listensocket;
-		ev.events = EPOLLIN;
+		ev.events = EPOLLIN|EPOLLET;
 		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listensocket, &ev) == -1)
 			{
 				int save_errno = errno;
@@ -49,22 +49,23 @@ void Multiplexer::addlsToEpoll() {
 	}
 }
 
-void set_nonblocking(int sock_fd) {
+int set_nonblocking(int sock_fd) {
 	int flag;
 
 	flag = fcntl(sock_fd, F_GETFL, 0);
 	if (flag == -1)
 	{
-		std::cerr << "fcntl set failed" << std::endl;
-		return;
+		std::cerr << "fcntl get failed" << std::endl;
+		return (-1);
 	}
 	flag |= O_NONBLOCK;
 
-	if (fcntl(sock_fd, F_SETFL, 0) == -1)
+	if (fcntl(sock_fd, F_SETFL, flag) == -1)
 	{
 		std::cerr << "fcntl set failed" << std::endl;
-		return;
+		return (-1);
 	}
+	return (sock_fd);
 }
 
 void Multiplexer::eventLoop() {
@@ -86,34 +87,57 @@ void Multiplexer::eventLoop() {
 			{
 				sockaddr_in clientsock;
 				socklen_t length =  sizeof(clientsock);
-				int connec = accept(ready_fd, reinterpret_cast<sockaddr *>(&clientsock), &length);
-				if (connec < 0)
+				while (true)
 				{
-					return;
-				}
-				ev.data.fd = connec;
-				ev.events = EPOLLIN|EPOLLOUT;
-				set_nonblocking(connec);
-				if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
-				{
-					int save_errno = errno;
-					std::cerr << "epoll add failed: " << strerror(save_errno) << std::endl;
-					return;
-				}
-				else
-				{
-					it->second.push_back(connec);
-					std::cout << "client socket successfully added to epoll\n";
+					int connec = accept(ready_fd, reinterpret_cast<sockaddr *>(&clientsock), &length);
+					if (connec < 0)
+					{
+						return;
+					}
+					if (errno == EAGAIN)
+						break;
+					ev.data.fd = connec;
+					ev.events = EPOLLIN|EPOLLET;
+					connec = set_nonblocking(connec);
+					if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
+					{
+						int save_errno = errno;
+						std::cerr << "epoll add failed: " << strerror(save_errno) << std::endl;
+						return;
+					}
+					else
+					{
+						it->second.push_back(connec);
+						std::cout << "client socket successfully added to epoll\n";
+					}
 				}
 			}
 			else
 			{
+				std::cout << "processing client session" << std::endl;
 				int session = events[n].data.fd;
 				char buffer;
-				while (read(session, &buffer, 1) != 0)
+				while (true)
 				{
-					write(STDOUT_FILENO, &buffer, 1);
+					ssize_t bytes_read = read(session, &buffer, 1);
+					if (bytes_read > 0)
+					{
+						write(STDOUT_FILENO, &buffer, 1);
+						continue;
+					}
+					if (bytes_read == 0)
+					{
+						close(session);
+						break;
+					}
+					if (errno == EAGAIN)
+					{
+						break;
+					}
+					close(session);
+					break;
 				}
+				
 			}
 		}
 	}
