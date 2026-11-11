@@ -201,9 +201,6 @@ int Request::process_header()
 
         if (line.empty())
         {
-			int c = 0;
-			int t = 0;
-
 			if (version == "HTTP/1.1" && header.find("host") == header.end())
 			{
 				return 1;
@@ -215,11 +212,6 @@ int Request::process_header()
 			}
 
 			if (header.find("content-length") != header.end())
-			{
-				c = 1;
-			}
-
-			if (c)
 			{
 				if (check_length(header["content-length"]))
 				{
@@ -270,9 +262,6 @@ int Request::process_header()
 
 		header[n] = v;
     }
-
-	h = 0;
-	return 0;
 }
 
 int Request::process_body()
@@ -337,7 +326,7 @@ int Request::feed(const std::string &s)
 			return 0;
 	}
 
-	if (ch && content_length == 0)
+	if (content_length == 0)
 	{
 		b = 0;
 		return 0;
@@ -357,4 +346,24 @@ int Request::feed(const std::string &s)
 	}
 
     return 0;
+}
+
+int Request::is_complete()
+{
+    return (!r && !h && !b);
+}
+
+std::string Request::get_method()
+{
+    return method;
+}
+
+std::string Request::get_path()
+{
+    return part;
+}
+
+std::string Request::get_body()
+{
+    return body;
 }
