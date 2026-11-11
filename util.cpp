@@ -1,3 +1,6 @@
+
+#include "util.hpp"
+
 std::string get_string(size_t n)
 {
 	std::string s;
