@@ -108,6 +108,81 @@ int write_file(std::string path, std::string body)
 	return 1;
 }
 
+std::string get_body(std::string reason)
+{
+	std::stringstream body;
+
+	body << "<html><body><h1>" << reason << "</h1></body></html>";
+
+	return body.str();
+}
+
+std::string err(int code)
+{
+	std::string body;
+	std::string response;
+
+	if (code == 400)
+	{
+		body = get_body("400 Bad Request");
+		response = resp(400, "Bad Request", body, "", "");
+		return response;
+	}
+
+	if (code == 403)
+	{
+		body = get_body("403 Forbidden");
+		response = resp(403, "Forbidden", body, "", "");
+		return response;
+	}
+
+	if (code == 404)
+	{
+		body = get_body("404 Not Found");
+		response = resp(404, "Not Found", body, "", "");
+		return response;
+	}
+
+	if (code == 413)
+	{
+		body = get_body("413 Payload Too Large");
+		response = resp(413, "Payload Too Large", body, "", "");
+		return response;
+	}
+
+	if (code == 500)
+	{
+		body = get_body("500 Internal Server Error");
+		response = resp(500, "Internal Server Error", body, "", "");
+		return response;
+	}
+
+	if (code == 501)
+	{
+		body = get_body("501 Not Implemented");
+		return resp(501, "Not Implemented", body, "", "");
+	}
+
+	body = get_body("Error");
+	response = resp(code, "Error", body, "", "");
+	
+	return response;
+}
+
+std::string resp(int code, const std::string &reason, const std::string &body,
+                 const std::string &location, const std::string &allow)
+{
+    std::stringstream response;
+    response << "HTTP/1.1 " << code << " " << reason << "\r\n"
+             << "Content-Length: " << body.size() << "\r\n";
+    if (!location.empty())
+        response << "Location: " << location << "\r\n";
+    if (!allow.empty())
+        response << "Allow: " << allow << "\r\n";
+    response << "\r\n" << body;
+    return response.str();
+}
+
 int have(const std::string &path)
 {
     struct stat info;
