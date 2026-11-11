@@ -23,9 +23,9 @@ class ListenSocket {
 		ListenSocket(int Port, std::string IPAddr);
 		ListenSocket(const ListenSocket& object);
 		void socketSetup();
-		int GetPortNum();
+		int GetPortNum() const;
 		int Getlsfd() const;
-		sockaddr_in GetSockInfo();
+		sockaddr_in GetSockInfo() const;
 		~ListenSocket();
 };
 

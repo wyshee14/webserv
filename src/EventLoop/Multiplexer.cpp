@@ -1,5 +1,6 @@
 #include "Multiplexer.hpp"
 #include <errno.h>
+#include <vector>
 // #include <cstring>
 
 Multiplexer::Multiplexer(const std::vector<ListenSocket>& ltsocks)  : epollfd(-1) {
@@ -68,11 +69,40 @@ int set_nonblocking(int sock_fd) {
 	return (sock_fd);
 }
 
+void printMapClientfds(std::map<int, std::vector<int> >& list, std::map<int, int >& reverselist)
+{
+	std::map<int, std::vector<int> >::const_iterator it;
+	for (it = list.begin(); it != list.end();  it++)
+	{
+		std::cout << "key: " << it->first << " value: ";
+		for (size_t i = 0; i < it->second.size(); i++)
+		{
+			std::cout << it->second.at(i) <<  " ";
+		}
+		std::cout << "\n";
+		std::cout << "size: " << it->second.size() << "\n" << std::endl;
+	}
+	std::map<int, int >::const_iterator iter;
+	for (iter = reverselist.begin(); iter != reverselist.end(); iter++)
+	{
+		std::cout << "key(client): " << iter->first << " --> value(listen): " << iter->second << std::endl;
+	}
+}
+
+void removeClientfd(int session, std::map<int, std::vector<int> >& list, std::map<int, int >& reverselist)
+{
+	int listen = reverselist[session];
+	std::vector<int>& clients =  list[listen];
+	clients.erase(remove(clients.begin(), clients.end(), session), clients.end());
+	reverselist.erase(session);
+}
+
 void Multiplexer::eventLoop() {
 	epollCreation();
 	addlsToEpoll();
 	while (1)
 	{
+		std::cout << "i am back up on the while loop" << std::endl;
 		int nfds = epoll_wait(epollfd, events, 10, -1);
 		if (nfds == -1)
 		{
@@ -87,18 +117,23 @@ void Multiplexer::eventLoop() {
 			{
 				sockaddr_in clientsock;
 				socklen_t length =  sizeof(clientsock);
-				while (true)
+				while (1)
 				{
 					int connec = accept(ready_fd, reinterpret_cast<sockaddr *>(&clientsock), &length);
-					if (connec < 0)
+					if (connec == -1 && errno == EAGAIN)
 					{
-						return;
-					}
-					if (errno == EAGAIN)
+						std::cout << "EAGAIN: breaking out of accept loop" << std::endl;	
 						break;
+					}
+					if (connec == -1)
+					{
+						std::cout << "accept error: " << errno << std::endl;
+						break;
+					}
 					ev.data.fd = connec;
 					ev.events = EPOLLIN|EPOLLET;
 					connec = set_nonblocking(connec);
+					this->clientToListen[connec] = ready_fd;
 					if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
 					{
 						int save_errno = errno;
@@ -108,7 +143,9 @@ void Multiplexer::eventLoop() {
 					else
 					{
 						it->second.push_back(connec);
+						this->clientToListen[connec] = ready_fd;
 						std::cout << "client socket successfully added to epoll\n";
+						printMapClientfds(this->listSocks, this->clientToListen);
 					}
 				}
 			}
@@ -116,6 +153,13 @@ void Multiplexer::eventLoop() {
 			{
 				std::cout << "processing client session" << std::endl;
 				int session = events[n].data.fd;
+				sockaddr_in clientinfo;
+				socklen_t length = sizeof(clientinfo);
+				if (getsockname(session, reinterpret_cast<sockaddr *>(&clientinfo), &length) == -1)
+				{
+					std::cout << "getsockname: " << errno << std::endl;
+				}
+				std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
 				char buffer;
 				while (true)
 				{
@@ -128,17 +172,21 @@ void Multiplexer::eventLoop() {
 					if (bytes_read == 0)
 					{
 						close(session);
+						removeClientfd(session, this->listSocks, this->clientToListen);
+						printMapClientfds(this->listSocks, this->clientToListen);
 						break;
 					}
 					if (errno == EAGAIN)
 					{
 						break;
 					}
+					removeClientfd(session, this->listSocks, this->clientToListen);
 					close(session);
 					break;
 				}
 				
 			}
+			std::cout << "i am here about to end the for loop iteration" << std::endl;
 		}
 	}
 }

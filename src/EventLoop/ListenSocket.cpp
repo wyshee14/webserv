@@ -46,6 +46,17 @@ void ListenSocket::socketSetup() {
 		sockInfo.sin_addr.s_addr = IPV4->sin_addr.s_addr; //ip address
 
 		std::cout << sockInfo.sin_addr.s_addr << std::endl;
+		// std::cout << htonl(sockInfo.sin_addr.s_addr) << std::endl;
+
+		int reuse = 1;
+		if (setsockopt(this->lsfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
+		{
+			int save_errno = errno;
+			std::cerr << "reuse error: " << strerror(save_errno) << std::endl;
+			close(this->lsfd);
+			return;
+		}
+
 		int sts = bind(this->lsfd, reinterpret_cast<sockaddr*> (&sockInfo), sizeof(sockInfo)); //binds it to a port
 		if (sts != 0)
 		{
@@ -68,7 +79,11 @@ void ListenSocket::socketSetup() {
 	return;
 }
 
-int ListenSocket::GetPortNum() {
+sockaddr_in ListenSocket::GetSockInfo() const {
+	return (this->sockInfo);
+}
+
+int ListenSocket::GetPortNum() const {
 	return (this->portNum);
 }
 
