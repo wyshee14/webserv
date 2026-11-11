@@ -80,7 +80,7 @@ std::string process_get(const std::string &root, const std::string &path, const 
             if (!have(indexpath))
                 continue;
 
-            if (!regular_file(indexpath))
+            if (!have_file(indexpath))
                 continue;
 
             if (!check_file(indexpath))
