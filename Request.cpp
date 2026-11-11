@@ -1,6 +1,6 @@
-#include "Request.hpp"
+#include "request.hpp"
 
-int Request::check_length(const std::string &value)
+int request::check_length(const std::string &value)
 {
     if (value.empty())
 	{
@@ -20,7 +20,7 @@ int Request::check_length(const std::string &value)
     return 0;
 }
 
-size_t Request::get_length(const std::string &value)
+size_t request::get_length(const std::string &value)
 {
     size_t result = 0;
 
@@ -34,7 +34,7 @@ size_t Request::get_length(const std::string &value)
     return result;
 }
 
-std::string Request::lower(const std::string &value)
+std::string request::lower(const std::string &value)
 {
     std::string result = value;
 
@@ -46,7 +46,7 @@ std::string Request::lower(const std::string &value)
     return result;
 }
 
-std::string Request::trim(const std::string &value)
+std::string request::trim(const std::string &value)
 {
     size_t begin = 0;
     size_t end = value.size();
@@ -64,14 +64,14 @@ std::string Request::trim(const std::string &value)
     return value.substr(begin, end - begin);
 }
 
-int Request::check_size(char c)
+int request::check_size(char c)
 {
     return std::isdigit(static_cast<unsigned char>(c)) ||
            (c >= 'a' && c <= 'f') ||
            (c >= 'A' && c <= 'F');
 }
 
-Request::Request(size_t max_body_size)
+request::request(size_t max_body_size)
     : keep_alive(1),
       r(1),
       h(1),
@@ -85,7 +85,7 @@ Request::Request(size_t max_body_size)
 	
 }
 
-int Request::get_value(char c)
+int request::get_value(char c)
 {
     if (c >= '0' && c <= '9')
         return c - '0';
@@ -96,7 +96,7 @@ int Request::get_value(char c)
     return c - 'A' + 10;
 }
 
-int Request::contain(const std::string &value, const std::string &s)
+int request::contain(const std::string &value, const std::string &s)
 {
 	std::string tmp = trim(value);
 
@@ -108,12 +108,12 @@ int Request::contain(const std::string &value, const std::string &s)
     return 1;
 }
 
-int Request::check_method(const std::string &method)
+int request::check_method(const std::string &method)
 {
     return method == "GET" || method == "POST" || method == "DELETE";
 }
 
-int Request::process_req()
+int request::process_req()
 {
     size_t p = amt.find("\r\n");
 
@@ -184,7 +184,7 @@ int Request::process_req()
     return 0;
 }
 
-int Request::process_header()
+int request::process_header()
 {
     while (1)
     {
@@ -264,7 +264,7 @@ int Request::process_header()
     }
 }
 
-int Request::process_body()
+int request::process_body()
 {
 	if (body.size() == content_length)
 	{
@@ -298,7 +298,7 @@ int Request::process_body()
     return 0;
 }
 
-int Request::feed(const std::string &s)
+int request::feed(const std::string &s)
 {
     amt += s;
 
@@ -348,22 +348,22 @@ int Request::feed(const std::string &s)
     return 0;
 }
 
-int Request::is_complete()
+int request::is_complete()
 {
     return (!r && !h && !b);
 }
 
-std::string Request::get_method()
+std::string request::get_method()
 {
     return method;
 }
 
-std::string Request::get_path()
+std::string request::get_path()
 {
     return part;
 }
 
-std::string Request::get_body()
+std::string request::get_body()
 {
     return body;
 }
