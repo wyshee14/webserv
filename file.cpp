@@ -1,3 +1,6 @@
+
+#include "file.hpp"
+
 int check_file(const std::string &path)
 {
     return (access(path.c_str(), R_OK) == 0);
