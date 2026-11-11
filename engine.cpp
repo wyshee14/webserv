@@ -6,9 +6,6 @@ std::string process(request request)
     std::string path = request.get_path();
     std::string method = request.get_method();
 
-    if (request.get_error())
-        return err(request.err());
-
     size_t start = 0;
     size_t end;
 
