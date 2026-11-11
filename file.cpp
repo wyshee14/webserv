@@ -47,7 +47,6 @@ std::string generate(std::string path, std::string url)
 	DIR *dir;
 	struct dirent *entry;
 	std::string name;
-	std::string href;
 	std::string body;
 
 	dir = opendir(path.c_str());
