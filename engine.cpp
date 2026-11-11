@@ -6,6 +6,22 @@ std::string process(request request)
     if (request.get_error())
         return err(request.err());
 
+    size_t start = 0;
+    size_t end;
+
+    while (start < path.size())
+    {
+        end = path.find('/', start);
+
+        if (end == std::string::npos)
+            end = path.size();
+
+        if (path.substr(start, end - start) == "..")
+            return err(403);
+
+        start = end + 1;
+    }
+	
     const LocationConfig *loc = s.findLocation(path);
 
     if (loc == NULL)
