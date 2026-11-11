@@ -1,13 +1,6 @@
-int check_file(std::string path)
+int check_file(const std::string &path)
 {
-	struct stat info;
-
-	if (stat(path.c_str(), &info) != 0)
-	{
-        return 0;
-	}
-
-	return S_ISREG(info.st_mode);
+    return (access(path.c_str(), R_OK) == 0);
 }
 
 std::string read_file(std::string path)
@@ -82,7 +75,7 @@ std::string generate(std::string path, std::string url)
 
 	closedir(dir);
 	body += "</body></html>\n";
-	return resp(200, "OK", body, "");
+	return resp(200, "OK", body, "", "");
 }
 
 int write_file(std::string path, std::string body)
@@ -114,4 +107,31 @@ int write_file(std::string path, std::string body)
 
 	close(fd);
 	return 1;
+}
+
+int have(const std::string &path)
+{
+    struct stat info;
+
+    return (stat(path.c_str(), &info) == 0);
+}
+
+int dir(const std::string &path)
+{
+    struct stat info;
+
+    if (stat(path.c_str(), &info) != 0)
+        return 0;
+
+    return S_ISDIR(info.st_mode);
+}
+
+int have_file(const std::string &path)
+{
+    struct stat info;
+
+    if (stat(path.c_str(), &info) != 0)
+        return 0;
+
+    return S_ISREG(info.st_mode);
 }
