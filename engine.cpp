@@ -39,12 +39,12 @@ std::string process(request request)
 
     if (method == "GET")
     {
-        return process_get(loc->getRoot(), path, loc->getPath(), loc->getIndex(), loc->getAutoindex());
+        return process_get(loc->getRoot(), path, loc->getIndex(), loc->getAutoindex());
     }
 
     if (method == "DELETE")
     {
-        return process_delete(loc->getRoot(), path, loc->getPath());
+        return process_delete(loc->getRoot(), path);
     }
 
     if (method == "POST")
@@ -55,7 +55,7 @@ std::string process(request request)
     return err(501);
 }
 
-std::string process_get(const std::string &root, const std::string &path, const std::string &loc, const std::vector<std::string> &index, int autoindex)
+std::string process_get(const std::string &root, const std::string &path, const std::vector<std::string> &index, int autoindex)
 {
     std::string file;
 
@@ -129,7 +129,7 @@ std::string process_get(const std::string &root, const std::string &path, const 
     return resp(200, "OK", body, "", "");
 }
 
-std::string process_delete(const std::string &root, const std::string &path, const std::string &loc)
+std::string process_delete(const std::string &root, const std::string &path)
 {
     std::string file;
 
