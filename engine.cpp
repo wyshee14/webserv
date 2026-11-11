@@ -107,6 +107,9 @@ std::string process_get(const std::string &root, const std::string &path, const 
         return err(403);
     }
 
+	if (!have_file(file))
+        return err(403);
+
     if (!check_file(file))
         return err(403);
 
