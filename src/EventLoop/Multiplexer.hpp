@@ -16,7 +16,7 @@
 
 #define MAX_VALUE 10
 
-class Multiplexer : public EventException {
+class Multiplexer {
     private:
         std::map<int, std::vector<int> >   listSocks;
         std::map<int, int>                 clientToListen;
@@ -28,7 +28,7 @@ class Multiplexer : public EventException {
         void epollCreation();
         void addlsToEpoll();
         void eventLoop();
-        ~Multiplexer();
+        virtual ~Multiplexer();
 };
 
 #endif

@@ -13,7 +13,7 @@ void MasterProcess::errorCloseSockets() {
 	std::vector<ListenSocket>::iterator it;
 	for (it = lsocs.begin(); it < lsocs.end(); it++)
 	{
-		if (it->GetPass() == false)
+		if (it->GetPass() == false && it->Getlsfd() != -1)
 			close(it->Getlsfd());
 	}
 }
@@ -21,6 +21,12 @@ void MasterProcess::errorCloseSockets() {
 int MasterProcess::SocketBuilder() {
 	std::cout << "size of config " << config.size() << std::endl;
 	std::cout << "entering SocketBuilder" << std::endl;
+	size_t totalSockets = 0;
+	for (size_t i = 0; i < config.size(); i++)
+	{
+		totalSockets += config[i].getListenEndpoint().size();
+	}
+	lsocs.reserve(totalSockets);
 	for (size_t i = 0; i < config.size(); i++)
 	{
 		const std::vector<ListenDirective> &ref = config[i].getListenEndpoint();
@@ -40,17 +46,19 @@ int MasterProcess::SocketBuilder() {
 			lsocs[i].SetPass(true);
 		}
 	}
+	catch (EventException& e) {
+		errorCloseSockets();
+		if (e.getExceptionType() == EventException::GETADDRINFOEXCEPTION)
+		{
+			std::cerr << e.what() << gai_strerror(e.getSaveErrno()) << std::endl;
+		}
+		std::cerr << e.what() << strerror(e.getSaveErrno()) << std::endl;
+		
+		return (1);
+	}
 	catch (std::exception& e) {
-		if (EventException::GETADDRINFOEXCEPTION)
-		{
-			errorCloseSockets();
-			std::cerr << e.what() << gai_strerror(getAddrError()) << std::endl;
-		}
-		else
-		{
-			errorCloseSockets();
-			std::cerr << e.what() << strerror(getSaveErrno()) << std::endl;
-		}
+		errorCloseSockets();
+		std::cerr << e.what() << std::endl;
 		return (1);
 	}
 	return (0);

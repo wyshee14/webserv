@@ -1,7 +1,7 @@
 #include "EventException.hpp"
 
-EventException::EventException() {
-    switch (_errorCode)
+EventException::EventException(int errcode, ExceptionList enumtype) : _saveErrno(errcode), _errType(enumtype) {
+    switch (_errType)
     {
         case SOCKETSETUPEXCEPTION:
             _errorMessage = "Socket setup failure: ";
@@ -40,26 +40,16 @@ const char * EventException::what() const throw() {
     return (_errorMessage.c_str());
 }
 
-const int& EventException::getErrorCode() const {
-    return (_errorCode);
+int EventException::getSaveErrno() const {
+    return (_saveErrno);
 }
 
-const int EventException::getSaveErrno() const {
-    return (_saveErrno);
+EventException::ExceptionList EventException::getExceptionType() const {
+    return (_errType);
 }
 
 void EventException::setSaveErrno(int errnocode) {
     this->_saveErrno = errnocode;
 }
 
-const int EventException::getAddrError() const {
-    return (_addrError);
-}
-
-void EventException::setAddrError(int addrerr) {
-    this->_addrError = addrerr;
-}
-
-EventException::~EventException() {
-    std::cout << "EventException destructor called" << std::endl;
-}
+EventException::~EventException() throw () {}

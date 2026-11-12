@@ -9,6 +9,7 @@ ListenSocket::ListenSocket(int Port, std::string IPaddr) : _pass(false), _portNu
 ListenSocket::ListenSocket(const ListenSocket& object) {
 	
 	std::cout << "ListenSocket copy constructor called" << std::endl;
+	this->_pass = object._pass;
 	this->_portNum = object._portNum;
 	this->_sockInfo = object._sockInfo;
 	this->_IPAddr = object._IPAddr;
@@ -38,44 +39,40 @@ void ListenSocket::socketSetup() {
 		if (stats != 0)
 		{
 			close(this->_lsfd);
-			throw EventException::GETADDRINFOEXCEPTION;
+			throw EventException(stats, EventException::GETADDRINFOEXCEPTION);
 		}
 		sockaddr_in *IPV4 = (sockaddr_in *)res->ai_addr;
 		_sockInfo.sin_addr.s_addr = IPV4->sin_addr.s_addr; //ip address
 
 		std::cout << _sockInfo.sin_addr.s_addr << std::endl;
+		freeaddrinfo(res);
 
 		int reuse = 1;
 		if (setsockopt(this->_lsfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
 		{
-			EventException::setSaveErrno(errno);
 			close(this->_lsfd);
-			throw EventException::SOCKOPTEXCEPTION;
+			throw EventException(errno, EventException::SOCKOPTEXCEPTION);
 		}
 
 		int sts = bind(this->_lsfd, reinterpret_cast<sockaddr*> (&_sockInfo), sizeof(_sockInfo)); //binds it to a port
 		if (sts != 0)
 		{
-			EventException::setSaveErrno(errno);
 			close(this->_lsfd);
-			throw EventException::BINDEXCEPTION;
+			throw EventException(errno, EventException::BINDEXCEPTION);
 		}
 		
-		freeaddrinfo(res);
 		std::cout << "socket bind successful" << std::endl;
 
 		int status = listen(this->_lsfd, SOMAXCONN);
 		if (status < 0)
 		{
-			EventException::setSaveErrno(errno);
 			close(this->_lsfd);
-			throw EventException::LISTENEXCEPTION;
+			throw EventException(errno, EventException::LISTENEXCEPTION);
 		}
 		std::cout << "socket listen successful" << std::endl;
 		return;
 	}
-	EventException::setSaveErrno(this->_lsfd);
-	throw EventException::SOCKETSETUPEXCEPTION;
+	throw EventException(this->_lsfd, EventException::SOCKETSETUPEXCEPTION);
 }
 
 int ListenSocket::GetPass() const {
@@ -99,7 +96,8 @@ int ListenSocket::Getlsfd() const {
 }
 
 ListenSocket::~ListenSocket() {
-	close (this->_lsfd);
+	if (this->_lsfd >= 0)
+		close (this->_lsfd);
 	std::cout << "ListenSocket Object destroyed" << std::endl;
 }
 

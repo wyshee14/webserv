@@ -13,7 +13,7 @@
 # include <cstring>
 # include "EventException.hpp"
 
-class ListenSocket : public EventException{
+class ListenSocket {
 	private:
 		bool		_pass;
 		int			_portNum;
@@ -30,7 +30,7 @@ class ListenSocket : public EventException{
 		int GetPortNum() const;
 		int Getlsfd() const;
 		sockaddr_in GetSockInfo() const;
-		~ListenSocket();
+		virtual ~ListenSocket();
 };
 
 #endif

@@ -24,10 +24,7 @@ Multiplexer::Multiplexer(const std::vector<ListenSocket>& ltsocks)  : epollfd(-1
 void Multiplexer::epollCreation() {
 	this->epollfd = epoll_create(MAX_VALUE);
 	if (epollfd == -1)
-	{
-		EventException::setSaveErrno(epollfd);
-		throw EventException::EPOLLCREATIONEXCEPTION;
-	}
+		throw EventException(epollfd, EventException::EPOLLCREATIONEXCEPTION);
 
 	std::cout << "epoll creation successful\n";
 }
@@ -40,10 +37,7 @@ void Multiplexer::addlsToEpoll() {
 		ev.data.fd = listensocket;
 		ev.events = EPOLLIN|EPOLLET;
 		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listensocket, &ev) == -1)
-			{
-				EventException::setSaveErrno(errno);
-				throw EventException::LISTENSOCKETEPOLLCTLADDEXCEPTION;
-			}
+				throw EventException(errno, EventException::LISTENSOCKETEPOLLCTLADDEXCEPTION);
 		std::cout << " listen socket added to epoll succeed\n";
 	}
 }
@@ -104,8 +98,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 		int nfds = epoll_wait(epollfd, events, 10, -1);
 		if (nfds == -1)
 		{
-			EventException::setSaveErrno(nfds);
-			throw EventException::EPOLLWAITEXCEPTION;
+			throw EventException(nfds, EventException::EPOLLWAITEXCEPTION);
 		}
 		for (int n = 0; n < nfds; n++)
 		{
@@ -125,8 +118,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					}
 					if (connec == -1)
 					{
-						EventException::setSaveErrno(connec);
-						throw EventException::ACCEPTEXCEPTION;
+						throw EventException(connec, EventException::ACCEPTEXCEPTION);
 					}
 					ev.data.fd = connec;
 					ev.events = EPOLLIN|EPOLLET; //!client sockets need to have both epollin and epollout ?
@@ -134,8 +126,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					this->clientToListen[connec] = ready_fd;
 					if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
 					{
-						EventException::setSaveErrno(errno);
-						throw EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION;
+						throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
 					}
 					else
 					{

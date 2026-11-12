@@ -12,7 +12,7 @@
 # include "EventException.hpp"
 # include "../ConfigParsing/ServerConfig.hpp"
 
-class MasterProcess : public EventException{
+class MasterProcess {
 	private:
 		std::vector<ServerConfig> config;
         std::vector<ListenSocket> lsocs; //how do you relate listensocket fd to epoll
@@ -22,7 +22,7 @@ class MasterProcess : public EventException{
 		void errorCloseSockets();
 		int SocketBuilder();
 		std::vector<ListenSocket> &getlsocs();
-        ~MasterProcess();
+        virtual ~MasterProcess();
 };
 
 #endif

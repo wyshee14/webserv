@@ -5,13 +5,8 @@
 # include <exception>
 
 class EventException : public std::exception {
-    private:
-        int _errorCode;
-        int _saveErrno;
-        int _addrError;
-        std::string _errorMessage;
     public:
-        typedef enum {
+        enum ExceptionList {
             SOCKETSETUPEXCEPTION,
             BINDEXCEPTION,
             GETADDRINFOEXCEPTION,
@@ -23,17 +18,19 @@ class EventException : public std::exception {
             LISTENSOCKETEPOLLCTLADDEXCEPTION,
             CLIENTSOCKETEPOLLCTLADDEXCEPTION,
         };
-        EventException();
-
+        EventException(int errcode, ExceptionList enumtype);
+        
         const char *what() const throw();
-
-        const int& getErrorCode() const;
-        const int getSaveErrno() const;
+        
+        int getSaveErrno() const;
         void setSaveErrno(int errnocode);
-        const int getAddrError() const;
-        void setAddrError(int addrerr);
-
-        ~EventException();
+        ExceptionList getExceptionType() const;
+        
+        ~EventException() throw();
+    private:
+            int _saveErrno;
+            ExceptionList _errType;
+            std::string _errorMessage;
 };
 
 #endif
