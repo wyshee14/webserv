@@ -81,7 +81,7 @@ request::request(size_t max_body_size)
     content_length = 0;
 	size = 0;
 	data = 0;
-    max_body_size = max_body_size;
+    body_size = max_body_size;
 }
 
 int request::get_value(char c)
@@ -155,7 +155,7 @@ int request::process_req()
         return 1;
 	}
 
-    if (version != "HTTP/1.0" && version != "HTTP/1.1")
+    if (version != "HTTP/1.1")
     {
         return 1;
     }
@@ -200,14 +200,9 @@ int request::process_header()
 
         if (line.empty())
         {
-			if (version == "HTTP/1.1" && header.find("host") == header.end())
+			if (header.find("host") == header.end())
 			{
 				return 1;
-			}
-
-			if (version != "HTTP/1.1")
-			{
-				keep_alive = 0;
 			}
 
 			if (header.find("content-length") != header.end())
@@ -219,10 +214,18 @@ int request::process_header()
 
 				content_length = get_length(header["content-length"]);
 
-				if (content_length > max_body_size)
+				if (content_length > body_size)
 				{
 					return 1;
 				}
+			}
+
+			if (header.find("connection") != header.end())
+			{
+			    std::string value = lower(header["connection"]);
+			
+			    if (value == "close")
+			        keep_alive = 0;
 			}
 
             h = 0;
@@ -345,6 +348,11 @@ int request::feed(const std::string &s)
 	}
 
     return 0;
+}
+
+int request::get_keep_alive()
+{
+    return keep_alive;
 }
 
 int request::is_complete()
