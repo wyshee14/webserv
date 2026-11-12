@@ -365,6 +365,13 @@ std::string request::get_method()
     return method;
 }
 
+std::string request::take_amt()
+{
+    std::string amount = amt;
+    amt.clear();
+    return amount;
+}
+
 std::string request::get_path()
 {
     return part;
