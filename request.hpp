@@ -18,7 +18,7 @@ private:
     size_t content_length;
     size_t size;
     size_t data;
-    size_t max_body_size;
+    size_t body_size;
     std::string amt;
     std::string method;
     std::string full;
@@ -44,6 +44,7 @@ public:
     int feed(const std::string &s);
     int is_complete();
     std::string get_method();
+    std::string take_amt();
     std::string get_path();
     std::string get_body();
 };
