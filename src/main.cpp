@@ -14,9 +14,19 @@ int main(int ac, char **av)
     {
         Webserv server(path);
 		MasterProcess factory(server.getServers());
-		factory.SocketBuilder();
-		Multiplexer event(factory.getlsocs());
-		event.eventLoop();
+		int toProceed = factory.SocketBuilder();
+        if (toProceed == 0)
+        {
+            Multiplexer event(factory.getlsocs());
+            try {
+                event.eventLoop();
+            }
+            catch (std::exception& e) {
+    
+            }
+        }
+        else
+            return(1);
     }
     catch(const std::exception& e)
     {

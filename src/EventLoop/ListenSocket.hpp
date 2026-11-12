@@ -11,18 +11,22 @@
 # include <cstdlib>
 # include <unistd.h>
 # include <cstring>
+# include "EventException.hpp"
 
-class ListenSocket {
+class ListenSocket : public EventException{
 	private:
-		int			portNum;
-		std::string	IPAddr;
-		sockaddr_in	sockInfo;
-		int			lsfd;
+		bool		_pass;
+		int			_portNum;
+		std::string	_IPAddr;
+		sockaddr_in	_sockInfo;
+		int			_lsfd;
 		
 	public:
 		ListenSocket(int Port, std::string IPAddr);
 		ListenSocket(const ListenSocket& object);
 		void socketSetup();
+		int GetPass() const;
+		void SetPass(bool flag);
 		int GetPortNum() const;
 		int Getlsfd() const;
 		sockaddr_in GetSockInfo() const;

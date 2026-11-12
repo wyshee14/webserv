@@ -1,4 +1,5 @@
 #include "MasterProcess.hpp"
+#include <exception>
 
 MasterProcess::MasterProcess() {
 	std::cout << "MasterProcess Object created" << std::endl;
@@ -8,7 +9,16 @@ MasterProcess::MasterProcess(const std::vector<ServerConfig>& obj) {
 	this->config = obj;
 }
 
-void MasterProcess::SocketBuilder() {
+void MasterProcess::errorCloseSockets() {
+	std::vector<ListenSocket>::iterator it;
+	for (it = lsocs.begin(); it < lsocs.end(); it++)
+	{
+		if (it->GetPass() == false)
+			close(it->Getlsfd());
+	}
+}
+
+int MasterProcess::SocketBuilder() {
 	std::cout << "size of config " << config.size() << std::endl;
 	std::cout << "entering SocketBuilder" << std::endl;
 	for (size_t i = 0; i < config.size(); i++)
@@ -23,10 +33,27 @@ void MasterProcess::SocketBuilder() {
 		}
 		std::cout << "-----------------one iteration of directive done--------------\n";
 	}
-	for (size_t i = 0; i < lsocs.size(); i++)
-	{
-		lsocs[i].socketSetup();
+	try {
+		for (size_t i = 0; i < lsocs.size(); i++)
+		{
+			lsocs[i].socketSetup();
+			lsocs[i].SetPass(true);
+		}
 	}
+	catch (std::exception& e) {
+		if (EventException::GETADDRINFOEXCEPTION)
+		{
+			errorCloseSockets();
+			std::cerr << e.what() << gai_strerror(getAddrError()) << std::endl;
+		}
+		else
+		{
+			errorCloseSockets();
+			std::cerr << e.what() << strerror(getSaveErrno()) << std::endl;
+		}
+		return (1);
+	}
+	return (0);
 }
 
 std::vector<ListenSocket>& MasterProcess::getlsocs() {

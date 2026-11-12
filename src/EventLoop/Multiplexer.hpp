@@ -12,22 +12,12 @@
 # include <netinet/in.h>
 # include <fcntl.h>
 # include "ListenSocket.hpp"
+# include "EventException.hpp"
 
 #define MAX_VALUE 10
 
-// struct domainfd {
-//     std::string domain;
-//     int fd;
-//     void domainfd(int );
-// }
-
-class Multiplexer {
+class Multiplexer : public EventException {
     private:
-        //!change keys to a struct or listensocket class
-        //!optimize for efficient access to the right clientfd
-        //!use port to get the right keys
-        //!potentially use binary integer representation of ip to compare
-        //!use it to remove value element (clientfd) from key element (listen socket)
         std::map<int, std::vector<int> >   listSocks;
         std::map<int, int>                 clientToListen;
         int                                epollfd;

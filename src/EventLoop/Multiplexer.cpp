@@ -1,7 +1,6 @@
 #include "Multiplexer.hpp"
 #include <errno.h>
 #include <vector>
-// #include <cstring>
 
 Multiplexer::Multiplexer(const std::vector<ListenSocket>& ltsocks)  : epollfd(-1) {
 	std::vector<ListenSocket>::const_iterator it;
@@ -26,8 +25,8 @@ void Multiplexer::epollCreation() {
 	this->epollfd = epoll_create(MAX_VALUE);
 	if (epollfd == -1)
 	{
-		std::cerr << "epoll creation failed\n";
-		return;
+		EventException::setSaveErrno(epollfd);
+		throw EventException::EPOLLCREATIONEXCEPTION;
 	}
 
 	std::cout << "epoll creation successful\n";
@@ -42,9 +41,8 @@ void Multiplexer::addlsToEpoll() {
 		ev.events = EPOLLIN|EPOLLET;
 		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listensocket, &ev) == -1)
 			{
-				int save_errno = errno;
-				std::cerr << "epoll add failed: " << strerror(save_errno) << std::endl;
-				return;
+				EventException::setSaveErrno(errno);
+				throw EventException::LISTENSOCKETEPOLLCTLADDEXCEPTION;
 			}
 		std::cout << " listen socket added to epoll succeed\n";
 	}
@@ -97,7 +95,7 @@ void removeClientfd(int session, std::map<int, std::vector<int> >& list, std::ma
 	reverselist.erase(session);
 }
 
-void Multiplexer::eventLoop() {
+void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epoll is event driven fd manager
 	epollCreation();
 	addlsToEpoll();
 	while (1)
@@ -106,8 +104,8 @@ void Multiplexer::eventLoop() {
 		int nfds = epoll_wait(epollfd, events, 10, -1);
 		if (nfds == -1)
 		{
-			std::cerr << "epoll wait failure\n";
-			return;
+			EventException::setSaveErrno(nfds);
+			throw EventException::EPOLLWAITEXCEPTION;
 		}
 		for (int n = 0; n < nfds; n++)
 		{
@@ -127,18 +125,17 @@ void Multiplexer::eventLoop() {
 					}
 					if (connec == -1)
 					{
-						std::cout << "accept error: " << errno << std::endl;
-						break;
+						EventException::setSaveErrno(connec);
+						throw EventException::ACCEPTEXCEPTION;
 					}
 					ev.data.fd = connec;
-					ev.events = EPOLLIN|EPOLLET;
+					ev.events = EPOLLIN|EPOLLET; //!client sockets need to have both epollin and epollout ?
 					connec = set_nonblocking(connec);
 					this->clientToListen[connec] = ready_fd;
 					if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
 					{
-						int save_errno = errno;
-						std::cerr << "epoll add failed: " << strerror(save_errno) << std::endl;
-						return;
+						EventException::setSaveErrno(errno);
+						throw EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION;
 					}
 					else
 					{
