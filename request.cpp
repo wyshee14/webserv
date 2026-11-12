@@ -72,17 +72,16 @@ int request::check_size(char c)
 }
 
 request::request(size_t max_body_size)
-    : keep_alive(1),
-      r(1),
-      h(1),
-      b(1),
-      ce(0),
-      content_length(0),
-      size(0),
-      data(0),
-	  max_body_size(max_body_size)
 {
-	
+    r = 1;
+	h = 1;
+	b = 1;
+	ce = 0;
+	keep_alive = 1;
+    content_length = 0;
+	size = 0;
+	data = 0;
+    max_body_size = max_body_size;
 }
 
 int request::get_value(char c)
