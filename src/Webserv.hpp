@@ -3,17 +3,22 @@
 
 # include <vector>
 # include "ConfigParsing/ServerConfig.hpp" 
-# include "ConfigParsing/LocationConfig.hpp" 
+# include "ConfigParsing/LocationConfig.hpp"
+# include "EventLoop/MasterProcess.hpp"
+# include "EventLoop/Multiplexer.hpp"
 
 class Webserv {
 	private:
-		std::vector<ServerConfig> _servers;
+		std::vector<ServerConfig>	_servers;
+
 	public:
 		Webserv(const std::string &configPath);
 		
+		int Masterprocessor();
+
 		~Webserv();
 		
-		//method to set up listening socket and bind it to port specified in ServerConfig.
+		
 		const std::vector<ServerConfig> &getServers() const;
 };
 

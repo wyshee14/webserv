@@ -139,40 +139,49 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 			}
 			else
 			{
-				std::cout << "processing client session" << std::endl;
-				int session = events[n].data.fd;
-				sockaddr_in clientinfo;
-				socklen_t length = sizeof(clientinfo);
-				if (getsockname(session, reinterpret_cast<sockaddr *>(&clientinfo), &length) == -1)
+				if (events[n].events == EPOLLIN)
 				{
-					std::cout << "getsockname: " << errno << std::endl;
-				}
-				std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
-				char buffer;
-				while (true)
-				{
-					ssize_t bytes_read = read(session, &buffer, 1);
-					if (bytes_read > 0)
+					std::cout << "processing read operation" << std::endl;
+					int session = events[n].data.fd;
+					sockaddr_in clientinfo;
+					socklen_t length = sizeof(clientinfo);
+					if (getsockname(session, reinterpret_cast<sockaddr *>(&clientinfo), &length) == -1)
 					{
-						write(STDOUT_FILENO, &buffer, 1);
-						continue;
+						std::cout << "getsockname: " << errno << std::endl;
 					}
-					if (bytes_read == 0)
+					std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
+					char buffer;
+					while (true)
 					{
-						close(session);
+						ssize_t bytes_read = read(session, &buffer, 1);
+						if (bytes_read > 0)
+						{
+							write(session, &buffer, 1);
+							continue;
+						}
+						if (bytes_read == 0)
+						{
+							close(session);
+							removeClientfd(session, this->listSocks, this->clientToListen);
+							printMapClientfds(this->listSocks, this->clientToListen);
+							break;
+						}
+						if (errno == EAGAIN)
+						{
+							break;
+						}
 						removeClientfd(session, this->listSocks, this->clientToListen);
-						printMapClientfds(this->listSocks, this->clientToListen);
+						close(session);
 						break;
 					}
-					if (errno == EAGAIN)
-					{
-						break;
-					}
-					removeClientfd(session, this->listSocks, this->clientToListen);
-					close(session);
-					break;
+
 				}
-				
+				if (events[n].events == EPOLLOUT)
+				{
+					//create a buffer for the leftover bytes
+					//write operation to write it to this fd, stop when EAGAIN
+					//remove EPOLLOUT flag once fully read
+				}
 			}
 			std::cout << "i am here about to end the for loop iteration" << std::endl;
 		}
