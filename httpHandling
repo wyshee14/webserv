@@ -1,0 +1,201 @@
+
+#include "request.hpp"
+
+int containsChunkedCoding(const std::map<std::string,std::string>& headerFields)
+{
+    std::map<std::string, std::string>::const_iterator headerEntry = headerFields.find("transfer-encoding");
+
+    if (headerEntry == headerFields.end())
+        return FAILURE_RESULT;
+
+    return scanChunkedTransferCodingValue(headerEntry->second);
+}
+
+void HttpData::clear()
+{
+    method.clear();
+    path.clear();
+    arg.clear();
+    version.clear();
+    body.clear();
+    header.clear();
+    contentLength = 0;
+    hasContentLength = 0;
+}
+
+void HttpData::getRequestLine(const std::string& requestLine)
+{
+    std::stringstream st(requestLine);
+
+    if (!(st >> method >> path >> version))
+        throw std::runtime_error("Malformed request line");
+
+    size_t pos = path.find('?');
+
+    if (pos != std::string::npos)
+    {
+        if (pos + ONE_CHARACTER < path.size())
+            arg = path.substr(pos + ONE_CHARACTER);
+
+        path = path.substr(FIRST_POSITION, pos);
+    }
+
+    if (path.empty() || path[FIRST_POSITION] != '/')
+        throw std::runtime_error("invalid path");
+
+    if (version.find("HTTP/") != FIRST_POSITION)
+        throw std::runtime_error("invalid http version");
+
+    std::string additionalToken;
+
+    if (st >> additionalToken)
+        throw std::runtime_error("redundant token in request line");
+}
+
+void HttpData::getHeaderFields(const std::string& headerSection)
+{
+    std::stringstream st(headerSection);
+    std::string currentLine;
+
+    std::getline(st, currentLine);
+
+    while (std::getline(st, currentLine))
+    {
+        if (!currentLine.empty() &&
+            currentLine[currentLine.size() - ONE_CHARACTER] == '\r')
+        {
+            currentLine.erase(currentLine.size() - ONE_CHARACTER);
+        }
+
+        if (currentLine.empty())
+            continue;
+
+        size_t pos = currentLine.find(':');
+
+        if (pos == std::string::npos)
+            throw std::runtime_error("malformed header");
+
+        std::string headerName =
+          toLowerAsciiEngine(currentLine.substr(FIRST_POSITION, pos));
+
+        std::string headerValue =
+          trimAsciiEngine(currentLine.substr(pos + ONE_CHARACTER));
+
+        if (headerName.empty())
+            throw std::runtime_error("Malformed header: empty key");
+
+        if (header.find(headerName) != header.end())
+            throw std::runtime_error("Duplicate header");
+
+        header[headerName] = headerValue;
+    }
+}
+
+void HttpData::verifyHeader(size_t maximumBodySize)
+{
+    if (version == "HTTP/1.1")
+    {
+        std::map<std::string, std::string>::const_iterator hostEntry = header.find("host");
+
+        if (hostEntry == header.end())
+            throw std::runtime_error("Missing Host header");
+
+        if (hostEntry->second.empty())
+            throw std::runtime_error("Invalid Host header");
+    }
+
+    int hasChunkedPayload = containsChunkedCoding(header);
+
+    if (hasChunkedPayload && header.find("content-length") != header.end())
+    {
+        throw std::runtime_error("Invalid Content-Length");
+    }
+
+    std::map<std::string, std::string>::const_iterator lengthEntry = header.find("content-length");
+
+    if (lengthEntry != header.end())
+    {
+        const std::string& lengthText = lengthEntry->second;
+
+        if (lengthText.empty())
+            throw std::runtime_error("Empty Content-Length");
+
+        errno = NO_ERROR;
+
+        char* conversionEnd = NULL;
+
+        unsigned long convertedLength = std::strtoul(lengthText.c_str(),&conversionEnd,10);
+
+        if (conversionEnd == lengthText.c_str() || *conversionEnd != STRING_END_MARKER || errno == ERANGE)
+        {
+            throw std::runtime_error("Invalid Content-Length");
+        }
+
+        contentLength = static_cast<size_t>(convertedLength);
+
+        if (contentLength > maximumBodySize)
+            throw std::runtime_error("Body too large");
+
+        hasContentLength = SUCCESS_RESULT;
+    }
+}
+
+void HttpData::extractPayload(const std::string& data,size_t pos,size_t maximumBodySize)
+{
+    size_t payloadStart = pos + FOUR_CHARACTERS;
+
+    if (payloadStart > data.size())
+        throw std::runtime_error("Incomplete request");
+
+    if (containsChunkedCoding(header))
+    {
+        int oversizedPayload = FAILURE_RESULT;
+
+        if (!getChunkedPayloadForHttpRequest(data.substr(payloadStart),maximumBodySize,body,&oversizedPayload))
+        {
+            if (oversizedPayload)
+                throw std::runtime_error("Body too large");
+
+            throw std::runtime_error("Malformed chunked body");
+        }
+
+        return;
+    }
+
+    if (hasContentLength)
+    {
+        if (payloadStart + contentLength > data.size())
+            throw std::runtime_error("Body shorter than Content-Length");
+
+        body = data.substr(payloadStart, contentLength);
+    }
+    else
+    {
+        body.clear();
+    }
+}
+
+void HttpData::get(const std::string& data,size_t maximumBodySize)
+{
+    clear();
+
+    size_t pos = data.find("\r\n\r\n");
+
+    if (pos == std::string::npos)
+        throw std::runtime_error("Incomplete request");
+
+    size_t p = data.find("\r\n");
+
+    if (p == std::string::npos)
+        throw std::runtime_error("Invalid request line");
+
+    std::string requestLine = data.substr(FIRST_POSITION,p);
+
+    getRequestLine(requestLine);
+
+    std::string headerSection = data.substr(FIRST_POSITION,pos);
+
+    getHeaderFields(headerSection);
+    verifyHeader(maximumBodySize);
+    extractPayload(data, pos, maximumBodySize);
+}
