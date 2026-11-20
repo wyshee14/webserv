@@ -1,17 +1,17 @@
 
 #include "request.hpp"
 
-int containsChunkedCoding(const std::map<std::string,std::string>& headerFields)
+int containsChunked(const std::map<std::string, std::string>& headerFields)
 {
-    std::map<std::string, std::string>::const_iterator headerEntry = headerFields.find("transfer-encoding");
+    std::map<std::string, std::string>::const_iterator header = headerFields.find("transfer-encoding");
 
-    if (headerEntry == headerFields.end())
+    if (header == headerFields.end())
         return FAILURE_RESULT;
 
-    return scanChunkedTransferCodingValue(headerEntry->second);
+    return scanChunkedTransferCodingValue(header->second);
 }
 
-void HttpData::clear()
+void HttpHandling::init()
 {
     method.clear();
     path.clear();
@@ -23,9 +23,9 @@ void HttpData::clear()
     hasContentLength = 0;
 }
 
-void HttpData::getRequestLine(const std::string& requestLine)
+void HttpHandling::getRequest(const std::string& tmp)
 {
-    std::stringstream st(requestLine);
+    std::stringstream st(tmp);
 
     if (!(st >> method >> path >> version))
         throw std::runtime_error("Malformed request line");
@@ -43,8 +43,8 @@ void HttpData::getRequestLine(const std::string& requestLine)
     if (path.empty() || path[0] != '/')
         throw std::runtime_error("invalid path");
 
-    if (version.find("HTTP/") != 0)
-        throw std::runtime_error("invalid http version");
+    if (version != "HTTP/1.1")
+        throw std::runtime_error("invalid version");
 
     std::string additionalToken;
 
@@ -52,7 +52,7 @@ void HttpData::getRequestLine(const std::string& requestLine)
         throw std::runtime_error("redundant token in request line");
 }
 
-void HttpData::getHeaderFields(const std::string& headerSection)
+void HttpHandling::getHeaderFields(const std::string& headerSection)
 {
     std::stringstream st(headerSection);
     std::string currentLine;
@@ -61,10 +61,9 @@ void HttpData::getHeaderFields(const std::string& headerSection)
 
     while (std::getline(st, currentLine))
     {
-        if (!currentLine.empty() &&
-            currentLine[currentLine.size() - ONE_CHARACTER] == '\r')
+        if (!currentLine.empty() && currentLine[currentLine.size() - 1] == '\r')
         {
-            currentLine.erase(currentLine.size() - ONE_CHARACTER);
+            currentLine.erase(currentLine.size() - 1);
         }
 
         if (currentLine.empty())
@@ -79,7 +78,7 @@ void HttpData::getHeaderFields(const std::string& headerSection)
           toLowerAsciiEngine(currentLine.substr(0, pos));
 
         std::string headerValue =
-          trimAsciiEngine(currentLine.substr(pos + ONE_CHARACTER));
+          trimAsciiEngine(currentLine.substr(pos + 1));
 
         if (headerName.empty())
             throw std::runtime_error("Malformed header: empty key");
@@ -91,20 +90,18 @@ void HttpData::getHeaderFields(const std::string& headerSection)
     }
 }
 
-void HttpData::verifyHeader(size_t maximumBodySize)
+void HttpHandling::verifyHeader(size_t maximumBodySize)
 {
-    if (version == "HTTP/1.1")
-    {
-        std::map<std::string, std::string>::const_iterator hostEntry = header.find("host");
+    std::map<std::string, std::string>::const_iterator hostEntry = header.find("host");
 
-        if (hostEntry == header.end())
-            throw std::runtime_error("Missing Host header");
+    if (hostEntry == header.end())
+        throw std::runtime_error("Missing Host header");
 
-        if (hostEntry->second.empty())
-            throw std::runtime_error("Invalid Host header");
-    }
+    if (hostEntry->second.empty())
+        throw std::runtime_error("Invalid Host header");
+    
 
-    int hasChunkedPayload = containsChunkedCoding(header);
+    int hasChunkedPayload = containsChunked(header);
 
     if (hasChunkedPayload && header.find("content-length") != header.end())
     {
@@ -122,16 +119,16 @@ void HttpData::verifyHeader(size_t maximumBodySize)
 
         errno = NO_ERROR;
 
-        char* conversionEnd = NULL;
+        char* convert = NULL;
 
-        unsigned long convertedLength = std::strtoul(lengthText.c_str(),&conversionEnd,10);
+        unsigned long length = std::strtoul(lengthText.c_str(),&convert,10);
 
-        if (conversionEnd == lengthText.c_str() || *conversionEnd != STRING_END_MARKER || errno == ERANGE)
+        if (convert == lengthText.c_str() || *convert != STRING_END_MARKER || errno == ERANGE)
         {
             throw std::runtime_error("Invalid Content-Length");
         }
 
-        contentLength = static_cast<size_t>(convertedLength);
+        contentLength = static_cast<size_t>(length);
 
         if (contentLength > maximumBodySize)
             throw std::runtime_error("Body too large");
@@ -140,9 +137,9 @@ void HttpData::verifyHeader(size_t maximumBodySize)
     }
 }
 
-void HttpData::extractPayload(const std::string& data,size_t pos,size_t maximumBodySize)
+void HttpHandling::extractPayload(const std::string& data,size_t pos,size_t maximumBodySize)
 {
-    size_t payloadStart = pos + FOUR_CHARACTERS;
+    size_t payloadStart = pos + 4;
 
     if (payloadStart > data.size())
         throw std::runtime_error("Incomplete request");
@@ -175,9 +172,9 @@ void HttpData::extractPayload(const std::string& data,size_t pos,size_t maximumB
     }
 }
 
-void HttpData::get(const std::string& data,size_t maximumBodySize)
+void HttpHandling::get(const std::string& data,size_t maxBodySize)
 {
-    clear();
+    init();
 
     size_t pos = data.find("\r\n\r\n");
 
@@ -189,13 +186,13 @@ void HttpData::get(const std::string& data,size_t maximumBodySize)
     if (p == std::string::npos)
         throw std::runtime_error("Invalid request line");
 
-    std::string requestLine = data.substr(0,p);
+    std::string tmp = data.substr(0,p);
 
-    getRequestLine(requestLine);
+    getRequest(tmp);
 
-    std::string headerSection = data.substr(0,pos);
+    std::string header = data.substr(0,pos);
 
-    getHeaderFields(headerSection);
-    verifyHeader(maximumBodySize);
-    extractPayload(data, pos, maximumBodySize);
+    getHeaderFields(header);
+    verifyHeader(maxBodySize);
+    extractPayload(data, pos, maxBodySize);
 }
