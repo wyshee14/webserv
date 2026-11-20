@@ -174,10 +174,11 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 						close(session);
 						break;
 					}
-
 				}
 				if (events[n].events == EPOLLOUT)
 				{
+					std::cout << "processing write operation" << std::endl;
+					int session = events[n].data.fd;
 					//create a buffer for the leftover bytes
 					//write operation to write it to this fd, stop when EAGAIN
 					//remove EPOLLOUT flag once fully read
