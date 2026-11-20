@@ -37,13 +37,13 @@ void HttpData::getRequestLine(const std::string& requestLine)
         if (pos + ONE_CHARACTER < path.size())
             arg = path.substr(pos + ONE_CHARACTER);
 
-        path = path.substr(FIRST_POSITION, pos);
+        path = path.substr(0, pos);
     }
 
-    if (path.empty() || path[FIRST_POSITION] != '/')
+    if (path.empty() || path[0] != '/')
         throw std::runtime_error("invalid path");
 
-    if (version.find("HTTP/") != FIRST_POSITION)
+    if (version.find("HTTP/") != 0)
         throw std::runtime_error("invalid http version");
 
     std::string additionalToken;
@@ -76,7 +76,7 @@ void HttpData::getHeaderFields(const std::string& headerSection)
             throw std::runtime_error("malformed header");
 
         std::string headerName =
-          toLowerAsciiEngine(currentLine.substr(FIRST_POSITION, pos));
+          toLowerAsciiEngine(currentLine.substr(0, pos));
 
         std::string headerValue =
           trimAsciiEngine(currentLine.substr(pos + ONE_CHARACTER));
@@ -189,11 +189,11 @@ void HttpData::get(const std::string& data,size_t maximumBodySize)
     if (p == std::string::npos)
         throw std::runtime_error("Invalid request line");
 
-    std::string requestLine = data.substr(FIRST_POSITION,p);
+    std::string requestLine = data.substr(0,p);
 
     getRequestLine(requestLine);
 
-    std::string headerSection = data.substr(FIRST_POSITION,pos);
+    std::string headerSection = data.substr(0,pos);
 
     getHeaderFields(headerSection);
     verifyHeader(maximumBodySize);
