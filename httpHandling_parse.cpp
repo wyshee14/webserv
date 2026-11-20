@@ -3,7 +3,7 @@
 
 int scanChunkedTransferCodingValue(const std::string& value)
 {
-    std::istringstream stream(toLowerAsciiEngine(value));
+    std::stringstream stream(toLowerAsciiEngine(value));
     std::string token;
 
     while (std::getline(stream, token, ','))
@@ -17,24 +17,24 @@ int scanChunkedTransferCodingValue(const std::string& value)
 
 int scanChunkedHeaderFields(const std::string& headerCollection)
 {
-    std::istringstream headerStream(headerCollection);
-    std::string headerLine;
+    std::stringstream str(headerCollection);
+    std::string line;
 
-    while (std::getline(headerStream, headerLine))
+    while (std::getline(str, line))
     {
-        if (!headerLine.empty() && headerLine[headerLine.size() - 1] == '\r')
+        if (!line.empty() && line[line.size() - 1] == '\r')
         {
-            headerLine.erase(headerLine.size() - 1);
+            line.erase(line.size() - 1);
         }
 
-        size_t pos = headerLine.find(':');
+        size_t pos = line.find(':');
 
         if (pos == std::string::npos)
             continue;
 
-        std::string fieldName = toLowerAsciiEngine(headerLine.substr(EMPTY_POSITION, pos));
+        std::string fieldName = toLowerAsciiEngine(line.substr(EMPTY_POSITION, pos));
 
-        std::string fieldValue = trimAsciiEngine(headerLine.substr(pos + 1));
+        std::string fieldValue = trimAsciiEngine(line.substr(pos + 1));
 
         if (fieldName == "transfer-encoding" && scanChunkedTransferCodingValue(fieldValue))
         {
@@ -47,25 +47,25 @@ int scanChunkedHeaderFields(const std::string& headerCollection)
 
 int getChunkLengthLine(const std::string& lengthline,size_t& chunkLength)
 {
-    std::string hexadecimalToken = lengthline;
+    std::string token = lengthline;
 
-    size_t extensionPosition = hexadecimalToken.find(';');
+    size_t pos = token.find(';');
 
-    if (extensionPosition != std::string::npos)
-        hexadecimalToken = hexadecimalToken.substr(EMPTY_POSITION,extensionPosition);
+    if (pos != std::string::npos)
+        token = token.substr(EMPTY_POSITION,pos);
 
-    hexadecimalToken = trimAsciiEngine(hexadecimalToken);
+    token = trimAsciiEngine(token);
 
-    if (hexadecimalToken.empty())
+    if (token.empty())
         return FAILURE_RESULT;
 
     errno = NO_ERROR;
 
     char* conversionEnd = NULL;
 
-    unsigned long convertedLength = std::strtoul(hexadecimalToken.c_str(),&conversionEnd,HEXADECIMAL_RADIX);
+    unsigned long convertedLength = std::strtoul(token.c_str(), &conversionEnd, 16);
 
-    if (conversionEnd == hexadecimalToken.c_str() ||*conversionEnd != STRING_END_MARKER ||errno == ERANGE)
+    if (conversionEnd == token.c_str() || *conversionEnd != STRING_END_MARKER || errno == ERANGE)
     {
         return FAILURE_RESULT;
     }
@@ -88,7 +88,7 @@ int getChunkLengthLine(const std::string& lengthline,size_t& chunkLength)
 
         size_t upcomingChunkLength = EMPTY_POSITION;
 
-        if (!getChunkLengthLine(incoming.substr(p,pos - p),upcomingChunkLength))
+        if (!getChunkLengthLine(incoming.substr(p,pos - p), upcomingChunkLength))
         {
             return FAILURE_RESULT;
         }
@@ -180,25 +180,25 @@ int getChunkedPayloadForHttpRequest(const std::string& amount,size_t maximumPayl
 
  int inspectDecimalPayloadLength(const std::string& headerCollection,size_t& declaredPayloadLength,int& payloadLengthPresent,int* malformedPayloadLength)
 {
-    std::istringstream headerStream(headerCollection);
-    std::string headerLine;
+    std::istringstream str(headerCollection);
+    std::string line;
 
-    while (std::getline(headerStream, headerLine))
+    while (std::getline(str, line))
     {
-        if (!headerLine.empty()
-            && headerLine[headerLine.size() - 1] == '\r')
+        if (!line.empty()
+            && line[line.size() - 1] == '\r')
         {
-            headerLine.erase(headerLine.size() - 1);
+            line.erase(line.size() - 1);
         }
 
-        size_t pos = headerLine.find(':');
+        size_t pos = line.find(':');
 
         if (pos == std::string::npos)
             continue;
 
-        std::string fieldName = toLowerAsciiEngine(headerLine.substr(EMPTY_POSITION, pos));
+        std::string fieldName = toLowerAsciiEngine(line.substr(EMPTY_POSITION, pos));
 
-        std::string fieldValue = trimAsciiEngine(headerLine.substr(pos + 1));
+        std::string fieldValue = trimAsciiEngine(line.substr(pos + 1));
 
         if (fieldName == "content-length")
         {
@@ -220,11 +220,11 @@ int getChunkedPayloadForHttpRequest(const std::string& amount,size_t maximumPayl
 
             errno = NO_ERROR;
 
-            char* conversionEnd = NULL;
+            char* p = NULL;
 
-            unsigned long convertedLength = std::strtoul(fieldValue.c_str(),&conversionEnd,DECIMAL_RADIX);
+            unsigned long convertedLength = std::strtoul(fieldValue.c_str(),&p, 10);
 
-            if (conversionEnd == fieldValue.c_str() ||*conversionEnd != STRING_END_MARKER || errno == ERANGE)
+            if (p == fieldValue.c_str() || *p != '\0' || errno == ERANGE)
             {
                 if (malformedPayloadLength != NULL)
                     *malformedPayloadLength = SUCCESS_RESULT;
@@ -264,8 +264,7 @@ int extractCompleteHttp(std::string& incoming,std::string& extractedCollection,i
             return FAILURE_RESULT;
         }
 
-        extractedCollection =
-            incoming.substr(EMPTY_POSITION, completeCollectionExtent);
+        extractedCollection = incoming.substr(EMPTY_POSITION, completeCollectionExtent);
 
         incoming.erase(EMPTY_POSITION, completeCollectionExtent);
 
