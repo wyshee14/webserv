@@ -175,6 +175,8 @@ std::string Engine::handleGet(http& input, int close, const ServerConfig& config
 
     std::string mappedPath = mapRequestPathForLocationRoot(input.getPath(), route);
 
+	std::string indexFilename = resolveIndexForRequestEngine(config, route);
+
     fileHandler handler;
 
     std::string filesystemPath = handler.resolvePath(mappedPath,root);
@@ -234,7 +236,7 @@ std::string Engine::handlePost(http& input,int close,const ServerConfig& config,
     if (!ensureDirectoryExistsEngine(uploadDirectory))
         return buildErrorResponse(500, close, &config);
 
-    std::string uploadFilename = "upload.txt"
+    std::string uploadFilename = "upload.txt";
     
 	if (uploadFilename.empty())
 		return buildErrorResponse(400, close, &config);
