@@ -81,21 +81,6 @@ std::vector<std::string> Engine::methodNotAllowedHeaders(const LocationConfig* r
     return responseHeaders;
 }
 
-int isUnsafeUploadFilenameEngine(const std::string& filename)
-{
-    if (filename.empty())
-        return 1;
-
-    if (filename == "." || filename == "..")
-        return 1;
-
-    if (filename.find('/') != std::string::npos
-        || filename.find('\\') != std::string::npos)
-        return 1;
-
-    return 0;
-}
-
 int ensureDirectoryExistsEngine(const std::string& directoryPath)
 {
     if (directoryPath.empty())
@@ -172,8 +157,6 @@ std::string Engine::handleGet(http& input, int close, const ServerConfig& config
         return buildErrorResponse(403, close, &config);
 
     std::string root = resolveLocationRoot(config, route);
-
-    std::string mappedPath = mapRequestPathForLocationRoot(input.getPath(), route);
 
 	std::string indexFilename = resolveIndexForRequestEngine(config, route);
 
@@ -274,8 +257,6 @@ std::string Engine::handleDelete(http& input,int close,const ServerConfig& confi
         return buildErrorResponse(403, close, &config);
 
     std::string root = resolveLocationRoot(config, route);
-
-    std::string mappedPath = mapRequestPathForLocationRoot(input.getPath(), route);
 
     fileHandler handler;
 
