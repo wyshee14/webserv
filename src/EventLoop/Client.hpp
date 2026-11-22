@@ -43,6 +43,8 @@
 //      IDLE, WRITING
 //last_activity is the last time stamp (std::time)
 
+//!implement a working client class containing read/write buffer
+
 class Client {
     private:
             //recv_buffer - to store read TCP bytes
