@@ -1,20 +1,20 @@
 #include "engine.hpp"
 
-std::string Engine::handleIncoming(const std::string& req, ServerConfig* cf)
+std::string Engine::handleIncoming(const std::string& req, ServerConfig* config)
 {
-    if (cf == NULL)
-        return buildErrorResponse(500, 1, cf);
+    if (config == NULL)
+        return buildErrorResponse(500, 1, config);
 
-    size_t maximumBodyLength = cf->getMaxBodySize();
+    size_t maximumBodyLength = config->getMaxBodySize();
     size_t maximumRequestLength = maximumBodyLength + MAXIMUM_HEADER_LENGTH;
 
     if (req.size() > maximumRequestLength)
-        return buildErrorResponse(413, 1, cf);
+        return buildErrorResponse(413, 1, config);
 
     http http;
 
     if (http.process(req, maximumBodyLength))
-        return buildErrorResponse(400, 1, cf);
+        return buildErrorResponse(400, 1, config);
 
     const LocationConfig* dst = NULL;
 
@@ -22,8 +22,8 @@ std::string Engine::handleIncoming(const std::string& req, ServerConfig* cf)
 
     if (!isMethodAllowed(http.getMethod(), dst))
     {
-        return buildErrorResponse(405, close, cf, methodNotAllowedHeaders(dst));
+        return buildErrorResponse(405, close, config, methodNotAllowedHeaders(dst));
     }
 
-    return routeRequest(http, close, *cf, dst);
+    return routeRequest(http, close, *config, dst);
 }
