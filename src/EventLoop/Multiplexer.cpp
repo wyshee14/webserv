@@ -35,7 +35,7 @@ void Multiplexer::addlsToEpoll() {
 	{
 		const int &listensocket = it->first;
 		ev.data.fd = listensocket;
-		ev.events = EPOLLIN|EPOLLET;
+		ev.events = EPOLLIN;
 		if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listensocket, &ev) == -1)
 				throw EventException(errno, EventException::LISTENSOCKETEPOLLCTLADDEXCEPTION);
 		std::cout << " listen socket added to epoll succeed\n";
@@ -108,33 +108,26 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 			{
 				sockaddr_in clientsock;
 				socklen_t length =  sizeof(clientsock);
-				while (1)
+				int connec = accept(ready_fd, reinterpret_cast<sockaddr *>(&clientsock), &length);
+				if (connec == -1)
 				{
-					int connec = accept(ready_fd, reinterpret_cast<sockaddr *>(&clientsock), &length);
-					if (connec == -1 && errno == EAGAIN)
-					{
-						std::cout << "EAGAIN: breaking out of accept loop" << std::endl;	
-						break;
-					}
-					if (connec == -1)
-					{
-						throw EventException(connec, EventException::ACCEPTEXCEPTION);
-					}
-					ev.data.fd = connec;
-					ev.events = EPOLLIN|EPOLLET; //!client sockets need to have both epollin and epollout ?
-					connec = set_nonblocking(connec);
+					throw EventException(connec, EventException::ACCEPTEXCEPTION);
+					//should continue with the event loop
+				}
+				ev.data.fd = connec;
+				ev.events = EPOLLIN; //!client sockets need to have both epollin and epollout ?
+				connec = set_nonblocking(connec);
+				this->clientToListen[connec] = ready_fd;
+				if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
+				{
+					throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
+				}
+				else
+				{
+					it->second.push_back(connec);
 					this->clientToListen[connec] = ready_fd;
-					if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
-					{
-						throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
-					}
-					else
-					{
-						it->second.push_back(connec);
-						this->clientToListen[connec] = ready_fd;
-						std::cout << "client socket successfully added to epoll\n";
-						printMapClientfds(this->listSocks, this->clientToListen);
-					}
+					std::cout << "client socket successfully added to epoll\n";
+					printMapClientfds(this->listSocks, this->clientToListen);
 				}
 			}
 			else
@@ -150,39 +143,32 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 						std::cout << "getsockname: " << errno << std::endl;
 					}
 					std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
-					char buffer;
-					while (true)
+					char buffer[BUFFERSIZE];
+					ssize_t bytes_read = read(session, &buffer, 1);
+					if (bytes_read > 0)
 					{
-						ssize_t bytes_read = read(session, &buffer, 1);
-						if (bytes_read > 0)
-						{
-							write(session, &buffer, 1);
-							continue;
-						}
-						if (bytes_read == 0)
-						{
-							close(session);
-							removeClientfd(session, this->listSocks, this->clientToListen);
-							printMapClientfds(this->listSocks, this->clientToListen);
-							break;
-						}
-						if (errno == EAGAIN)
-						{
-							break;
-						}
+						write(session, &buffer, 1);
+					}
+					else if (bytes_read == 0)
+					{
+						close(session);
+						removeClientfd(session, this->listSocks, this->clientToListen);
+						printMapClientfds(this->listSocks, this->clientToListen);
+					}
+					else
+					{
 						removeClientfd(session, this->listSocks, this->clientToListen);
 						close(session);
-						break;
 					}
 				}
-				if (events[n].events == EPOLLOUT)
-				{
-					std::cout << "processing write operation" << std::endl;
-					int session = events[n].data.fd;
-					//create a buffer for the leftover bytes
-					//write operation to write it to this fd, stop when EAGAIN
-					//remove EPOLLOUT flag once fully read
-				}
+				// if (events[n].events == EPOLLOUT)
+				// {
+				// 	std::cout << "processing write operation" << std::endl;
+				// 	int session = events[n].data.fd;
+				// 	//create a buffer for the leftover bytes
+				// 	//write operation to write it to this fd, stop when EAGAIN
+				// 	//remove EPOLLOUT flag once fully read
+				// }
 			}
 			std::cout << "i am here about to end the for loop iteration" << std::endl;
 		}

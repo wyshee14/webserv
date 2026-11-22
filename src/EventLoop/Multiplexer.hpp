@@ -14,7 +14,8 @@
 # include "ListenSocket.hpp"
 # include "EventException.hpp"
 
-#define MAX_VALUE 10
+# define MAX_VALUE 10
+# define BUFFERSIZE 4096
 
 class Multiplexer {
     private:
