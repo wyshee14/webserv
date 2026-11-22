@@ -39,6 +39,11 @@ class LocationConfig {
         const int &getRedirectCode() const;
         const std::string &getRedirectTarget() const;
         const std::vector<std::string> &getAllowedMethods() const;
+        bool hasRoot() const;
+        bool hasAutoindex() const;
+        bool hasClientMaxBodySize() const;
+        bool hasAllowedMethods() const;
+        bool hasRedirect() const;
         
         // setter
         void setRoot(const std::string &value);

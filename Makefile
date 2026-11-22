@@ -11,7 +11,8 @@ SRC = src/main.cpp \
 	  src/ConfigParsing/ConfigParser.cpp \
 	  src/ConfigParsing/Directive.cpp \
 	  src/ConfigParsing/ServerConfig.cpp \
-	  src/ConfigParsing/LocationConfig.cpp 
+	  src/ConfigParsing/LocationConfig.cpp \
+	  src/ConfigParsing/RequestConfig.cpp
 
 OBJ = $(SRC:.cpp=.o)
 

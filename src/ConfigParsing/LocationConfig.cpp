@@ -1,6 +1,6 @@
 # include "LocationConfig.hpp"
 # include "ConfigException.hpp"
-# include <cstdlib> // library for atoi
+# include <cstdlib> 	// library for atoi
 
 LocationConfig::LocationConfig()
 {
@@ -21,7 +21,10 @@ LocationConfig::LocationConfig(const LocationConfig &copy)
       _errorPage(copy._errorPage), _autoindex(copy._autoindex),
       _clientMaxBodySize(copy._clientMaxBodySize),
 	  _allowedMethods(copy._allowedMethods),
-	  _redirectTarget(copy._redirectTarget), _redirectCode(copy._redirectCode)
+	  _redirectTarget(copy._redirectTarget), _redirectCode(copy._redirectCode),
+	  _hasRoot(copy._hasRoot), _hasAutoindex(copy._hasAutoindex),
+	  _hasClientMaxBodySize(copy._hasClientMaxBodySize),
+	  _hasAllowedMethods(copy._hasAllowedMethods), _hasRedirect(copy._hasRedirect)
 {
 }
 
@@ -38,8 +41,38 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 		_allowedMethods = other._allowedMethods;
 		_redirectTarget = other._redirectTarget;
 		_redirectCode = other._redirectCode;
+		_hasRoot = other._hasRoot;
+		_hasAutoindex = other._hasAutoindex;
+		_hasClientMaxBodySize = other._hasClientMaxBodySize;
+		_hasAllowedMethods = other._hasAllowedMethods;
+		_hasRedirect = other._hasRedirect;
 	}
 	return *this;
+}
+
+bool LocationConfig::hasRoot() const
+{
+	return _hasRoot;
+}
+
+bool LocationConfig::hasAutoindex() const
+{
+	return _hasAutoindex;
+}
+
+bool LocationConfig::hasClientMaxBodySize() const
+{
+	return _hasClientMaxBodySize;
+}
+
+bool LocationConfig::hasAllowedMethods() const
+{
+	return _hasAllowedMethods;
+}
+
+bool LocationConfig::hasRedirect() const
+{
+	return _hasRedirect;
 }
 
 LocationConfig::~LocationConfig() {}

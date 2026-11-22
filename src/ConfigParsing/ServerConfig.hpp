@@ -9,8 +9,6 @@
 # include "Token.hpp"
 # include "Directive.hpp"
 
-// class LocationConfig;
-
 class ServerConfig {
     private:
         std::vector<ListenDirective> _listenEndpoint;

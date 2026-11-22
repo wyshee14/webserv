@@ -2,7 +2,7 @@
 # include <stdlib.h>    // library for strtoul
 # include "ConfigException.hpp"
 
-ServerConfig::ServerConfig() 
+ServerConfig::ServerConfig()
 {
     _autoindex = false;
     _clientMaxBodySize = 1000000;       // Default 1 megabyte
@@ -15,7 +15,9 @@ ServerConfig::ServerConfig(const ServerConfig &copy)
     : _listenEndpoint(copy._listenEndpoint), _root(copy._root), _indexFiles(copy._indexFiles),
       _errorPage(copy._errorPage), _autoindex(copy._autoindex),
       _clientMaxBodySize(copy._clientMaxBodySize),
-      _locations(copy._locations)
+      _locations(copy._locations),
+      _hasRoot(copy._hasRoot), _hasAutoindex(copy._hasAutoindex),
+      _hasClientMaxBodySize(copy._hasClientMaxBodySize)
 {
 }
 
@@ -23,13 +25,16 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other)
 {
     if (this != &other)
     {
-        _listenEndpoint = other._listenEndpoint;
-        _root = other._root;
-        _indexFiles = other._indexFiles;
-        _errorPage = other._errorPage;
-        _autoindex = other._autoindex;
-        _clientMaxBodySize = other._clientMaxBodySize;
-        _locations = other._locations;
+        _listenEndpoint = other.getListenEndpoint();
+        _root = other.getRoot();
+        _indexFiles = other.getIndex();
+        _errorPage = other.getErrorPage();
+        _autoindex = other.getAutoindex();
+        _clientMaxBodySize = other.getClientMaxBodySize();
+        _locations = other.getLocations();
+        _hasRoot = other._hasRoot;
+        _hasAutoindex = other._hasAutoindex;
+        _hasClientMaxBodySize = other._hasClientMaxBodySize;
     }
     return *this;
 }
@@ -62,7 +67,7 @@ void ServerConfig::addDirectives(const Directive &directive)
     else if (directive.key == "error_page")
     {
         setErrorPage(directive.values);
-    }  
+    }
     else
         throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE, directive.key);
 }
@@ -151,8 +156,8 @@ void ServerConfig::setListenEndpoints(const std::string &value)
         address = "0.0.0.0";
         port = value;
     }
-    else 
-    {    
+    else
+    {
         address = value.substr(0, separator);
         port = value.substr(separator + 1);
     }
@@ -173,5 +178,31 @@ const std::vector<LocationConfig> &ServerConfig::getLocations() const
 
 void ServerConfig::addLocation(LocationConfig &location)
 {
+    for (std::vector<LocationConfig>::const_iterator it = _locations.begin();
+         it != _locations.end(); ++it)
+    {
+        if (it->getPath() == location.getPath())
+            throw ConfigException(ConfigException::DUPLICATE_DIRECTIVE,
+                                  "location " + location.getPath());
+    }
     _locations.push_back(location);
+}
+
+const LocationConfig *ServerConfig::findLocation(const std::string &uri) const
+{
+    const LocationConfig *best = NULL;
+    size_t bestLength = 0;
+
+    for (std::vector<LocationConfig>::const_iterator it = _locations.begin();
+         it != _locations.end(); ++it)
+    {
+        const std::string &path = it->getPath();
+        // longest matching prefix wins, e.g. /images beats /
+        if (uri.compare(0, path.size(), path) == 0 && path.size() > bestLength)
+        {
+            best = &(*it);
+            bestLength = path.size();
+        }
+    }
+    return best;
 }
