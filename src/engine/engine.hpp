@@ -19,10 +19,10 @@ class Engine
 		std::vector<std::string> methodNotAllowedHeaders(const LocationConfig* route);
 		std::string mapRequestPathForLocationRoot(const std::string& requestPath, const LocationConfig* route);
 		std::string handleIncoming(const std::string& req, ServerConfig* cf);
-		std::string routeRequest(const http& input, int close, const ServerConfig& config, const LocationConfig* route);
-		std::string handleGet(const http& input, int close, const ServerConfig& config, const LocationConfig* route);
-		std::string handlePost(const http& input, int close, const ServerConfig& config, const LocationConfig* route);
-		std::string handleDelete(const http& input, int close, const ServerConfig& config, const LocationConfig* route);
+		std::string routeRequest(http& input, int close, const ServerConfig& config, const LocationConfig* route);
+		std::string handleGet(http& input, int close, const ServerConfig& config, const LocationConfig* route);
+		std::string handlePost(http& input, int close, const ServerConfig& config, const LocationConfig* route);
+		std::string handleDelete(http& input, int close, const ServerConfig& config, const LocationConfig* route);
 		std::string buildStandardResponse(int statusCode, const std::string& responseBody, int close);
 		std::string buildRedirectResponse(int statusCode, const std::string& redirectTarget, int close);
 		std::string buildResponse(const std::string& status, const std::string& responseBody, int close, const std::vector<std::string>& s);
