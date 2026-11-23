@@ -14,6 +14,7 @@ SRC = src/main.cpp \
 	  src/ConfigParsing/LocationConfig.cpp \
 	  src/EventLoop/MasterProcess.cpp src/EventLoop/ListenSocket.cpp \
 	  src/EventLoop/Multiplexer.cpp src/EventLoop/EventException.cpp \
+	  src/EventLoop/Client.cpp src/EventLoop/temp.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 

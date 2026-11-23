@@ -12,9 +12,11 @@ parserstate temp::parsing(std::string& recv_buffer) {
     // 1. HEADER STAGE: Look for the blank line "\r\n\r\n"
     if (_state == READING_HEADER)
 	{
-        size_t header_end = recv_buffer.find("\r\n\r\n");
+		std::cout << "recv_buffer: " << recv_buffer << std::endl;
+        size_t header_end = recv_buffer.find("\\r\\n\\r\\n");
         if (header_end == std::string::npos) 
 		{
+			std::cout << "i got return npos" << std::endl;
             return READING_HEADER; // Incomplete header, wait for more recv() bytes
     	}
 
@@ -53,7 +55,10 @@ parserstate temp::parsing(std::string& recv_buffer) {
 }
 
 parserstate temp::engine(std::string& write_buffer) {
-	write_buffer.append("-----RESPONSE SUCCESSFUL----");
+	write_buffer.append("-----RESPONSE SUCCESSFUL----\n");
+	write_buffer.append(_header);
+	if (_body.size() > 0)
+		write_buffer.append(_body);
 	return _state;
 }
 

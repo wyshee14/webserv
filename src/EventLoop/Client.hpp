@@ -2,7 +2,6 @@
 # define CLIENT_HPP
 
 # include <iostream>
-# include "Multiplexer.hpp"
 # include "temp.hpp"
 # include <ctime>
 
@@ -54,8 +53,8 @@ enum state {
 
 class Client {
     private:
-		int requestCount;
 		state announce;
+		int requestCount;
         std::string recvBuffer; //to store read TCP bytes
         std::string sendBuffer; //to store program response
 		temp parser;

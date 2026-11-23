@@ -2,7 +2,7 @@
 # define TEMP_HPP
 
 # include <iostream>
-# include "Client.hpp"
+# include <cstdlib>
 
 enum parserstate {
 	READING_HEADER,
@@ -16,7 +16,7 @@ class temp {
 		parserstate _state;
 		std::string _header;
 		std::string _body;
-		int _content_length;
+		size_t _content_length;
 	public:
 		temp();
 		parserstate getParserState();
