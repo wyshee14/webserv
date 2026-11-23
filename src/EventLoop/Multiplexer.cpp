@@ -118,6 +118,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 				ev.events = EPOLLIN; //!client sockets need to have both epollin and epollout ?
 				connec = set_nonblocking(connec);
 				this->clientToListen[connec] = ready_fd;
+				this->clientFdToObject[connec] = Client();
 				if (epoll_ctl(epollfd, EPOLL_CTL_ADD, connec, &ev) == -1)
 				{
 					throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
@@ -144,10 +145,20 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					}
 					std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
 					char buffer[BUFFERSIZE];
-					ssize_t bytes_read = read(session, &buffer, 1);
+					ssize_t bytes_read = read(session, &buffer, BUFFERSIZE);
 					if (bytes_read > 0)
 					{
-						write(session, &buffer, 1);
+						Client& clientObj = this->clientFdToObject[session];
+						clientObj.getRecvBuffer().append(buffer, bytes_read);
+						clientObj.setState(READING);
+						clientObj.processBytes();
+						if (clientObj.getState() == WRITING)
+						{
+							epoll_event ev;
+							ev.events = EPOLLIN | EPOLLOUT;
+							ev.data.fd = session;
+							epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev);
+						}
 					}
 					else if (bytes_read == 0)
 					{
@@ -157,18 +168,33 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					}
 					else
 					{
+						std::cerr << "File descriptor " << session << " failed to read: " << strerror(errno) << std::endl;
 						removeClientfd(session, this->listSocks, this->clientToListen);
 						close(session);
 					}
 				}
-				// if (events[n].events == EPOLLOUT)
-				// {
-				// 	std::cout << "processing write operation" << std::endl;
-				// 	int session = events[n].data.fd;
-				// 	//create a buffer for the leftover bytes
-				// 	//write operation to write it to this fd, stop when EAGAIN
-				// 	//remove EPOLLOUT flag once fully read
-				// }
+				if (events[n].events == EPOLLOUT)
+				{
+					std::cout << "processing write operation" << std::endl;
+					int session = events[n].data.fd;
+					Client ClientObj = clientFdToObject[session];
+					std::string& send_buffer = ClientObj.getSendBuffer();
+					size_t bytes_sent = send(session, send_buffer.c_str(), send_buffer.size(), 0);
+					if (bytes_sent < send_buffer.size())
+					{
+						send_buffer.erase(0, bytes_sent);
+						//send_timout starts
+					}
+					else if (bytes_sent == send_buffer.size())
+					{
+						send_buffer.erase(0, send_buffer.size());
+						ClientObj.incrementCount(1);
+						epoll_event ev;
+						ev.data.fd = session;
+						ev.events = EPOLLIN;
+						epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev);
+					}
+				}
 			}
 			std::cout << "i am here about to end the for loop iteration" << std::endl;
 		}

@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include "Multiplexer.hpp"
+# include "temp.hpp"
 # include <ctime>
 
 //!header without body
@@ -44,18 +45,33 @@
 //last_activity is the last time stamp (std::time)
 
 //!implement a working client class containing read/write buffer
+enum state {
+	READING,
+	IDLE,
+	WRITING,
+	CLOSED
+};
 
 class Client {
     private:
-            //recv_buffer - to store read TCP bytes
-            //send_buffer - to store program response
-            //client_body_timeout - a time set between two successive read operation (60s)
-            //client_header_timeout - a time set for the entire header read duration (60s)
-            //send_timeout - a time set between two successive write operation (60s)
-            //keepalive_timeout - a time set for idle period in between requests (75s)
-            //keepalive_request - a maximum amount requests in one client connection (100)
+		int requestCount;
+		state announce;
+        std::string recvBuffer; //to store read TCP bytes
+        std::string sendBuffer; //to store program response
+		temp parser;
+        //client_body_timeout - a time set between two successive read operation (60s)
+        //client_header_timeout - a time set for the entire header read duration (60s)
+        //send_timeout - a time set between two successive write operation (60s)
+        //keepalive_timeout - a time set for idle period in between requests (75s)
+        //keepalive_request - a maximum amount requests in one client connection (100)
     public:
         Client();
+		void processBytes();
+		void setState(state annc);
+		void incrementCount(int count);
+		const state& getState();
+		std::string& getRecvBuffer();
+		std::string& getSendBuffer();
         ~Client();
 };
 
