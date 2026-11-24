@@ -11,6 +11,7 @@ void Client::processBytes() {
 	{
 		std::cout << "----------i am inside process bytes and it is in response state-----------" << std::endl;
 		announce = WRITING;
+		parser.setParserState(READING_HEADER);
 		parser.engine(sendBuffer);
 	}
 

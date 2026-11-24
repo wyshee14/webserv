@@ -19,6 +19,7 @@ class temp {
 		size_t _content_length;
 	public:
 		temp();
+		void setParserState(parserstate state);
 		parserstate getParserState();
 		parserstate engine(std::string& write_buffer);
 		parserstate parsing(std::string& read_buffer);

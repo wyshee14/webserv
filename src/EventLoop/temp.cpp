@@ -4,6 +4,10 @@ temp::temp() : _state(READING_HEADER) {
 	std::cout << "temp object created" << std::endl;
 }
 
+void temp::setParserState(parserstate state) {
+	this->_state = state;
+}
+
 parserstate temp::getParserState() {
 	return (_state);
 }
@@ -29,20 +33,21 @@ parserstate temp::parsing(std::string& recv_buffer) {
         // Decide if we need to read a body or if we are already done
         if (_header.find("Content-Length") != _header.size())
 		{
-			std::string raw_content = _header.substr(_header.find("Content-Length: ") + 17, _header.size() - 17);
+			std::string raw_content = _header.substr(_header.find("Content-Length: ") + 16, _header.size() - 17);
             _content_length = std::strtoul(raw_content.c_str(), NULL, 10);
             _state = (_content_length > 0) ? READING_BODY : RESPONSE;
         }
 		else
 		{
-            _state = READING_HEADER; // No body (e.g., standard GET)
-			return RESPONSE;
+			return RESPONSE;// No body (e.g., standard GET)
 		}
 	}
 
     // 2. BODY STAGE: Consume exact _content_length bytes from recv_buffer
-    if (_state == READING_BODY)
+    if (_state == READING_BODY) //!content length has a number but not content
 	{
+		std::cout << "_content_length: " << _content_length << std::endl;
+		std::cout << recv_buffer.size() << std::endl;
         if (recv_buffer.size() < _content_length)
 		{
             return READING_BODY; // Incomplete body, wait for more recv() bytes
@@ -60,13 +65,16 @@ parserstate temp::parsing(std::string& recv_buffer) {
 
 parserstate temp::engine(std::string& write_buffer) {
 	std::cout << "*engine* before append: " << write_buffer << std::endl;
+	std::cout << "_header: " << _header << std::endl;
+	std::cout << "_body: " << _body << std::endl;
 	write_buffer.append("-----RESPONSE SUCCESSFUL----\n");
 	write_buffer.append(_header);
 	if (_body.size() > 0)
 		write_buffer.append(_body);
 	write_buffer.append("\n");
 	std::cout << "engine: " << write_buffer << std::endl;
-	
+	_header.clear();
+	_body.clear();
 	return _state;
 }
 

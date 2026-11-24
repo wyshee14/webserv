@@ -157,7 +157,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 						std::cout << "what is clientObj current state: " << clientObj.getState() << std::endl;
 						if (clientObj.getState() == IDLE)
 							clientObj.setState(READING);
-						if (clientObj.getState() == READING && clientObj.getRecvBuffer().size() > 0)
+						if (clientObj.getState() == READING && !clientObj.getRecvBuffer().empty())
 							clientObj.processBytes();
 						if (clientObj.getState() == WRITING)
 						{
@@ -186,23 +186,38 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					int session = events[n].data.fd;
 					Client &ClientObj = clientFdToObject[session];
 					std::string& send_buffer = ClientObj.getSendBuffer();
-					size_t bytes_sent = send(session, send_buffer.c_str(), send_buffer.size(), 0);
-					if (bytes_sent < send_buffer.size())
+					ssize_t bytes_sent = send(session, send_buffer.c_str(), send_buffer.size(), 0);
+					if (bytes_sent <= 0)
+					{
+					    epoll_ctl(epollfd, EPOLL_CTL_DEL, session, NULL);
+					    close(session);
+					    removeClientfd(session, this->listSocks, this->clientToListen);
+					    throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
+					}
+					if (static_cast<size_t>(bytes_sent) < send_buffer.size())
 					{
 						std::cout << "i am in the bytes not equal size" << std::endl;
 						send_buffer.erase(0, bytes_sent);
 						//send_timout starts
 					}
-					else if (bytes_sent == send_buffer.size())
+					else if (static_cast<size_t>(bytes_sent) == send_buffer.size())
 					{
 						send_buffer.erase(0, send_buffer.size());
 						ClientObj.incrementCount(1);
-						epoll_event ev;
-						ev.data.fd = session;
-						ev.events = EPOLLIN;
-						if (epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev) == -1)
+						if (!ClientObj.getRecvBuffer().empty())
 						{
-							throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
+							ClientObj.setState(READING);
+							ClientObj.processBytes();
+						}
+						if (ClientObj.getState() != WRITING)
+						{
+							epoll_event ev;
+							ev.data.fd = session;
+							ev.events = EPOLLIN;
+							if (epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev) == -1)
+							{
+								throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
+							}
 						}
 						ClientObj.setState(IDLE);
 					}
