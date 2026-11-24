@@ -32,53 +32,45 @@ std::string Engine::resolveLocationRoot(const ServerConfig& config,const Locatio
     return config.getRoot();
 }
 
-int Engine::isMethodAllowed(const std::string& requestMethod, const LocationConfig* route)
+int Engine::isMethodAllowed(const std::string& method, const RequestConfig& route)
 {
-    if (route == NULL)
+    if (!route.hasLocation())
         return 1;
 
-    const std::vector<std::string>& allowedMethods =
-        route->getAllowedMethods();
+    const std::vector<std::string>& methods = route.getAllowedMethods();
 
-    if (allowedMethods.empty())
-        return 0;
-
-    for (size_t i = 0; i < allowedMethods.size(); ++i)
+    for (size_t i = 0; i < methods.size(); ++i)
     {
-        if (allowedMethods[i] == requestMethod)
+        if (methods[i] == method)
             return 1;
     }
 
     return 0;
 }
 
-std::vector<std::string> Engine::methodNotAllowedHeaders(const LocationConfig* route)
+std::vector<std::string> Engine::methodNotAllowedHeaders(const RequestConfig& route)
 {
-    std::string allowedValue = "GET, POST, DELETE";
+    std::string value = "GET, POST, DELETE";
 
-    if (route != NULL)
-    {
-        const std::vector<std::string>& allowedMethods =
-            route->getAllowedMethods();
+	const std::vector<std::string>& methods = route.getAllowedMethods();
 
-        if (!allowedMethods.empty())
-        {
-            allowedValue.clear();
+	if (route.hasLocation())
+	{
+		value.clear();
 
-            for (size_t i = 0; i < allowedMethods.size(); ++i)
-            {
-                if (i > 0)
-                    allowedValue += ", ";
+		for (size_t i = 0; i < methods.size(); ++i)
+		{
+			if (i > 0)
+				value += ", ";
 
-                allowedValue += allowedMethods[i];
-            }
-        }
-    }
+			value += methods[i];
+		}
+	}
 
-    std::vector<std::string> responseHeaders;
-    responseHeaders.push_back("Allow: " + allowedValue);
+    std::vector<std::string> headers;
+    headers.push_back("Allow: " + value);
 
-    return responseHeaders;
+    return headers;
 }
 
 int ensureDirectoryExistsEngine(const std::string& directoryPath)
