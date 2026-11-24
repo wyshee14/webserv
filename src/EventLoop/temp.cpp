@@ -13,7 +13,7 @@ parserstate temp::parsing(std::string& recv_buffer) {
     if (_state == READING_HEADER)
 	{
 		std::cout << "recv_buffer: " << recv_buffer << std::endl;
-        size_t header_end = recv_buffer.find("\\r\\n\\r\\n");
+        size_t header_end = recv_buffer.find("\r\n\r\n");
         if (header_end == std::string::npos) 
 		{
 			std::cout << "i got return npos" << std::endl;
@@ -34,7 +34,10 @@ parserstate temp::parsing(std::string& recv_buffer) {
             _state = (_content_length > 0) ? READING_BODY : RESPONSE;
         }
 		else
-            _state = RESPONSE; // No body (e.g., standard GET)
+		{
+            _state = READING_HEADER; // No body (e.g., standard GET)
+			return RESPONSE;
+		}
 	}
 
     // 2. BODY STAGE: Consume exact _content_length bytes from recv_buffer
@@ -48,17 +51,22 @@ parserstate temp::parsing(std::string& recv_buffer) {
         // Copy exact 27 bytes into _body and erase them from recv_buffer
         _body = recv_buffer.substr(0, _content_length);
         recv_buffer.erase(0, _content_length);
-        _state = RESPONSE;
+        _state = READING_HEADER;
+		return RESPONSE;
     }
 
     return _state;
 }
 
 parserstate temp::engine(std::string& write_buffer) {
+	std::cout << "*engine* before append: " << write_buffer << std::endl;
 	write_buffer.append("-----RESPONSE SUCCESSFUL----\n");
 	write_buffer.append(_header);
 	if (_body.size() > 0)
 		write_buffer.append(_body);
+	write_buffer.append("\n");
+	std::cout << "engine: " << write_buffer << std::endl;
+	
 	return _state;
 }
 
