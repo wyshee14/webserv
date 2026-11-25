@@ -135,35 +135,37 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 			{
 				if (events[n].events == EPOLLIN)
 				{
-					std::cout << "processing read operation" << std::endl;
+					std::cout << "---{processing read operation}---" << std::endl;
 					int session = events[n].data.fd;
-					sockaddr_in clientinfo;
-					socklen_t length = sizeof(clientinfo);
-					if (getsockname(session, reinterpret_cast<sockaddr *>(&clientinfo), &length) == -1)
-					{
-						std::cout << "getsockname: " << errno << std::endl;
-					}
-					std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
+					// sockaddr_in clientinfo;
+					// socklen_t length = sizeof(clientinfo);
+					// if (getsockname(session, reinterpret_cast<sockaddr *>(&clientinfo), &length) == -1)
+					// {
+					// 	std::cout << "getsockname: " << errno << std::endl;
+					// }
+					// std::cout << "port: " << ntohs(clientinfo.sin_port) << "\n" << "ip address: "  << clientinfo.sin_addr.s_addr << std::endl;
 					char buffer[BUFFERSIZE];
 					ssize_t bytes_read = read(session, &buffer, BUFFERSIZE);
 					if (bytes_read > 0)
 					{
 						std::cout << "i am about to write what is being read" << std::endl;
 						write(STDOUT_FILENO, buffer, bytes_read);
+
 						Client& clientObj = this->clientFdToObject[session];
+
 						std::cout << "bfr recvBuffer: " << clientObj.getRecvBuffer() << std::endl;
 						clientObj.getRecvBuffer().append(buffer, bytes_read);
 						std::cout << "after recvBuffer: " << clientObj.getRecvBuffer() << std::endl;
 						std::cout << "what is clientObj current state: " << clientObj.getState() << std::endl;
+
 						if (clientObj.getState() == IDLE)
 							clientObj.setState(READING);
-						if (clientObj.getState() == READING && !clientObj.getRecvBuffer().empty())
-							clientObj.processBytes();
+						clientObj.processBytes();
 						if (clientObj.getState() == WRITING)
 						{
 							epoll_event ev;
-							ev.events = EPOLLIN | EPOLLOUT;
 							ev.data.fd = session;
+							ev.events = EPOLLIN | EPOLLOUT;
 							epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev);
 						}
 					}
@@ -182,7 +184,7 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 				}
 				if (events[n].events == EPOLLOUT)
 				{
-					std::cout << "processing write operation" << std::endl;
+					std::cout << "---[processing write operation]---" << std::endl;
 					int session = events[n].data.fd;
 					Client &ClientObj = clientFdToObject[session];
 					std::string& send_buffer = ClientObj.getSendBuffer();
@@ -198,12 +200,11 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 					{
 						std::cout << "i am in the bytes not equal size" << std::endl;
 						send_buffer.erase(0, bytes_sent);
-						//send_timout starts
 					}
 					else if (static_cast<size_t>(bytes_sent) == send_buffer.size())
 					{
-						send_buffer.erase(0, send_buffer.size());
-						ClientObj.incrementCount(1);
+						send_buffer.erase(0, bytes_sent);
+						ClientObj.setState(IDLE);
 						if (!ClientObj.getRecvBuffer().empty())
 						{
 							ClientObj.setState(READING);
@@ -211,15 +212,13 @@ void Multiplexer::eventLoop() { //nonblocking sockets keeps it non blocking, epo
 						}
 						if (ClientObj.getState() != WRITING)
 						{
+							std::cout << "Removing EPOLLOUT from client state" << std::endl;
+							std::cout << "client state: " << ClientObj.getState() << std::endl;
 							epoll_event ev;
-							ev.data.fd = session;
 							ev.events = EPOLLIN;
-							if (epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev) == -1)
-							{
-								throw EventException(errno, EventException::CLIENTSOCKETEPOLLCTLADDEXCEPTION);
-							}
+							ev.data.fd = session;
+							epoll_ctl(epollfd, EPOLL_CTL_MOD, session, &ev);
 						}
-						ClientObj.setState(IDLE);
 					}
 				}
 			}

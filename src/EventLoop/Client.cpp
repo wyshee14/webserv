@@ -5,13 +5,14 @@ Client::Client() : announce(IDLE), requestCount(0) {
 }
 
 void Client::processBytes() {
+	if (parser.getParserState() == RESPONSE)
+		parser.setParserState(READING_HEADER);
 	parserstate statement = parser.parsing(recvBuffer);
 	std::cout << statement << std::endl;
 	if (statement == RESPONSE)
 	{
 		std::cout << "----------i am inside process bytes and it is in response state-----------" << std::endl;
 		announce = WRITING;
-		parser.setParserState(READING_HEADER);
 		parser.engine(sendBuffer);
 	}
 
