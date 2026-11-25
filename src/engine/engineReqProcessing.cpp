@@ -5,25 +5,19 @@ std::string Engine::handleIncoming(const std::string& req, ServerConfig* config)
     if (config == NULL)
         return buildErrorResponse(500, 1, config);
 
-    size_t maximumBodyLength = config->getMaxBodySize();
-    size_t maximumRequestLength = maximumBodyLength + MAXIMUM_HEADER_LENGTH;
-
-    if (req.size() > maximumRequestLength)
-        return buildErrorResponse(413, 1, config);
-
     http http;
 
     if (http.process(req, maximumBodyLength))
         return buildErrorResponse(400, 1, config);
 
-    const LocationConfig* dst = NULL;
+    RequestConfig cf(request.getPath(), *config);
 
     int close = http.mustCloseByHttpRules();
 
-    if (!isMethodAllowed(http.getMethod(), dst))
+    if (!isMethodAllowed(http.getMethod(), cf))
     {
-        return buildErrorResponse(405, close, config, methodNotAllowedHeaders(dst));
+        return buildErrorResponse(405, close, cf, methodNotAllowedHeaders(cf));
     }
 
-    return routeRequest(http, close, *config, dst);
+    return routeRequest(http, close, cf);
 }

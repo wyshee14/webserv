@@ -13,10 +13,9 @@
 class Engine
 {
 	public:
-		int checkPath(const std::string& requestPath);
-		int isMethodAllowed(const std::string& requestMethod, const RequestConfig* route);
+		int checkPath(const std::string& path);
+		int isMethodAllowed(const std::string& method, const RequestConfig* route);
 		std::vector<std::string> methodNotAllowedHeaders(const RequestConfig* route);
-		std::string mapRequestPathForLocationRoot(const std::string& requestPath, const RequestConfig* route);
 		std::string handleIncoming(const std::string& req, ServerConfig* cf);
 		std::string routeRequest(http& input, int close, const ServerConfig& config, const RequestConfig* route);
 		std::string processGet(http& input, int close, const ServerConfig& config, const RequestConfig* route);
