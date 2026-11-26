@@ -166,9 +166,9 @@ std::string Engine::processPost(http& input,int c,const RequestConfig& config)
 
     fileHandler handler;
 
-    std::string path = handler.resolvePath(path, config.getRoot());
+    std::string p = handler.resolvePath(path, config.getRoot());
 
-    int fd = open(path.c_str(),O_CREAT | O_WRONLY | O_TRUNC,0644);
+    int fd = open(p.c_str(),O_CREAT | O_WRONLY | O_TRUNC,0644);
 
     if (fd < 0)
         return buildErrorResponse(500, c, config);
