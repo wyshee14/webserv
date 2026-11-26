@@ -16,7 +16,7 @@ class Engine
 		int checkPath(const std::string& path);
 		int isMethodAllowed(const std::string& method, const RequestConfig& route);
 		std::vector<std::string> methodNotAllowedHeaders(const RequestConfig& route);
-		std::string handleIncoming(const std::string& req, ServerConfig* cf);
+		std::string handleIncoming(const std::string& s, ServerConfig& config);
 		std::string routeRequest(http& input, int c, const RequestConfig& route);
 		std::string processGet(http& input, int c, const RequestConfig& route);
 		std::string processPost(http& input, int c, const RequestConfig& route);

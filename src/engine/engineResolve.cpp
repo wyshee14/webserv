@@ -153,7 +153,7 @@ std::string Engine::processGet(http& input, int c, const RequestConfig& config)
     }
 
     if (!handler.fileExists(path))
-        return buildErrorResponse(404, c, &config);
+        return buildErrorResponse(404, c, config);
 
 	std::string content = handler.readFile(path);
 
@@ -162,6 +162,9 @@ std::string Engine::processGet(http& input, int c, const RequestConfig& config)
 
 std::string Engine::processPost(http& input,int c,const RequestConfig& config)
 {
+	if (checkPath(input.getPath()))
+		return buildErrorResponse(403, c, config);
+
     const std::string& path = input.getPath();
 
     fileHandler handler;
@@ -204,7 +207,7 @@ std::string Engine::processDelete(http& input,int c,const RequestConfig& config)
     std::string path = handler.resolvePath(input.getPath(), config.getRoot());
 
     if (!handler.fileExists(path))
-        return buildErrorResponse(404, c, &config);
+        return buildErrorResponse(404, c, config);
 
     if (std::remove(path.c_str()) != 0)
         return buildErrorResponse(500, c, config);
