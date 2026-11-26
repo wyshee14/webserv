@@ -78,41 +78,26 @@ int ensureDirectoryExistsEngine(const std::string& dir)
     return S_ISDIR(stat.st_mode) ? 1 : 0;
 }
 
-std::string resolveIndexForRequestEngine(const ServerConfig& config, const LocationConfig* route)
+std::string Engine::routeRequest(http& input, int close, const RequestConfig& route)
 {
-    const std::vector<std::string>* indexes = NULL;
-
-    if (route != NULL && !route->getIndex().empty())
-        indexes = &route->getIndex();
-    else
-        indexes = &config.getIndex();
-
-    if (indexes->empty())
-        return "";
-
-    return (*indexes)[0];
-}
-
-std::string Engine::routeRequest(http& input, int close, const ServerConfig& config, const LocationConfig* route)
-{
-    if (route != NULL && !route->getRedirectTarget().empty())
+    if (route.getRedirectTarget().empty())
     {
-        return buildRedirectResponse(route->getRedirectCode(), route->getRedirectTarget(), close);
+        return buildRedirectResponse(route.getRedirectCode(), route.getRedirectTarget(), close);
     }
 
     if (input.getMethod() == "GET")
-        return handleGet(input, close, config, route);
+        return processGet(input, close, config);
 
     if (input.getMethod() == "POST")
-        return handlePost(input, close, config, route);
+        return processPost(input, close, config);
 
     if (input.getMethod() == "DELETE")
-        return handleDelete(input, close, config, route);
+        return processDelete(input, close, config);
 
     return buildErrorResponse(405, close, &config, methodNotAllowedHeaders(route));
 }
 
-std::string Engine::handleGet(http& input, int close, const RequestConfig& config)
+std::string Engine::processGet(http& input, int close, const RequestConfig& config)
 {
     if (checkPath(input.getPath()))
         return buildErrorResponse(403, close, &config);
@@ -138,25 +123,24 @@ std::string Engine::handleGet(http& input, int close, const RequestConfig& confi
                 path = indexPath;
             else if (config.getAutoindex())
             {
-                std::string directoryContent =
-                  handler.generateDirectoryListing(input.getPath(),path);
+                std::string content = handler.generateDirectoryListing(input.getPath(),path);
 
-                if (directoryContent.empty())
+                if (content.empty())
                     return buildErrorResponse(500, close, &config);
 
-                return buildStandardResponse(200,directoryContent, close);
+                return buildStandardResponse(200,content, close);
             }
             else
                 return buildErrorResponse(403, close, &config);
         }
         else if (config.getAutoindex())
         {
-            std::string directoryContent = handler.generateDirectoryListing(input.getPath(),path);
+            std::string content = handler.generateDirectoryListing(input.getPath(),path);
 
-            if (directoryContent.empty())
+            if (content.empty())
                 return buildErrorResponse(500, close, &config);
 
-            return buildStandardResponse(200,directoryContent,close);
+            return buildStandardResponse(200,content,close);
         }
         else
             return buildErrorResponse(403, close, &config);
@@ -170,34 +154,34 @@ std::string Engine::handleGet(http& input, int close, const RequestConfig& confi
 	return buildStandardResponse(200,content,close);
 }
 
-std::string Engine::handlePost(http& input,int close,const RequestConfig& config)
+std::string Engine::processPost(http& input,int close,const RequestConfig& config)
 {
 	if (config.getUploadDirectory().empty())
 		return buildErrorResponse(403, close, config);
 
-    const std::string& requestBody = input.getBody();
-    std::string uploadDirectory = config.getUploadDirectory();
+    const std::string& body = input.getBody();
+    std::string dir = config.getUploadDirectory();
 
-    if (!ensureDirectoryExistsEngine(uploadDirectory))
+    if (!ensureDirectoryExistsEngine(dir))
         return buildErrorResponse(500, close, &config);
 
-    std::string uploadFilename = "upload.txt";
+    std::string name = "upload.txt";
     
-	if (uploadFilename.empty())
+	if (name.empty())
 		return buildErrorResponse(400, close, &config);
 
-    std::string uploadFilePath = uploadDirectory + "/" + uploadFilename;
+    std::string path = dir + "/" + name;
 
-    int fd = open(uploadFilePath.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    int fd = open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
 
     if (fd < 0)
         return buildErrorResponse(500, close, &config);
 
     size_t n = 0;
 
-    while (n < requestBody.size())
+    while (n < body.size())
     {
-        ssize_t result = write(fd,requestBody.data() + n,requestBody.size() - n);
+        ssize_t result = write(fd,body.data() + n,body.size() - n);
 
         if (result <= 0)
         {
@@ -213,7 +197,7 @@ std::string Engine::handlePost(http& input,int close,const RequestConfig& config
     return buildStandardResponse(201,"Upload OK",close);
 }
 
-std::string Engine::handleDelete(http& input,int close,const RequestConfig& config)
+std::string Engine::processDelete(http& input,int close,const RequestConfig& config)
 {
     if (checkPath(input.getPath()))
         return buildErrorResponse(403, close, &config);

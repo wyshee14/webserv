@@ -10,7 +10,7 @@ std::string Engine::handleIncoming(const std::string& req, ServerConfig* config)
     if (http.process(req, maximumBodyLength))
         return buildErrorResponse(400, 1, config);
 
-    RequestConfig cf(request.getPath(), *config);
+    RequestConfig cf(http.getPath(), *config);
 
     int close = http.mustCloseByHttpRules();
 

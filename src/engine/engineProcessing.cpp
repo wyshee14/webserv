@@ -47,6 +47,11 @@ std::string Engine::buildStandardResponse(int status, const std::string& resp, i
     return buildResponse(str.str(), resp, close,std::vector<std::string>());
 }
 
+std::string Engine::buildErrorResponse(int status,int close,const RequestConfig& config)
+{
+    return buildErrorResponse(status,close,config,std::vector<std::string>());
+}
+
 std::string Engine::buildRedirectResponse(int status, const std::string& redirectTarget, int close)
 {
     if (status != 301 && status != 302 && status != 303
@@ -100,12 +105,7 @@ std::string Engine::appendHeaderToResponse(const std::string& response, const st
     return str;
 }
 
-std::string Engine::buildErrorResponse(int status,int close,const ServerConfig* config)
-{
-    return buildErrorResponse(status,close,config,std::vector<std::string>());
-}
-
-std::string Engine::buildErrorResponse(int status,int close,const ServerConfig* config,const std::vector<std::string>& s)
+std::string Engine::buildErrorResponse(int status,int close,const RequestConfig& config,const std::vector<std::string>& s)
 {
     const std::string phrase = phraseForStatusEngine(status);
 

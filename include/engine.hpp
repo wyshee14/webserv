@@ -14,13 +14,13 @@ class Engine
 {
 	public:
 		int checkPath(const std::string& path);
-		int isMethodAllowed(const std::string& method, const RequestConfig* route);
-		std::vector<std::string> methodNotAllowedHeaders(const RequestConfig* route);
+		int isMethodAllowed(const std::string& method, const RequestConfig& route);
+		std::vector<std::string> methodNotAllowedHeaders(const RequestConfig& route);
 		std::string handleIncoming(const std::string& req, ServerConfig* cf);
-		std::string routeRequest(http& input, int close, const ServerConfig& config, const RequestConfig* route);
-		std::string processGet(http& input, int close, const ServerConfig& config, const RequestConfig* route);
-		std::string processPost(http& input, int close, const ServerConfig& config, const RequestConfig* route);
-		std::string processDelete(http& input, int close, const ServerConfig& config, const RequestConfig* route);
+		std::string routeRequest(http& input, int close, const RequestConfig& route);
+		std::string processGet(http& input, int close, const RequestConfig& route);
+		std::string processPost(http& input, int close, const RequestConfig& route);
+		std::string processDelete(http& input, int close, const RequestConfig& route);
 		std::string buildStandardResponse(int statusCode, const std::string& responseBody, int close);
 		std::string buildErrorResponse(int statusCode, int close, const RequestConfig& config);
 		std::string buildRedirectResponse(int statusCode, const std::string& redirectTarget, int close);
