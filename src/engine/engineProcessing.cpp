@@ -39,20 +39,20 @@ std::string phraseForStatusEngine(int status)
         return "Internal Server Error";
 }
 
-std::string Engine::buildStandardResponse(int status, const std::string& resp, int close)
+std::string Engine::buildStandardResponse(int status, const std::string& resp, int c)
 {
     std::stringstream str;
     str << status << " " << phraseForStatusEngine(status);
 
-    return buildResponse(str.str(), resp, close,std::vector<std::string>());
+    return buildResponse(str.str(), resp, c,std::vector<std::string>());
 }
 
-std::string Engine::buildErrorResponse(int status,int close,const RequestConfig& config)
+std::string Engine::buildErrorResponse(int status,int c,const RequestConfig& config)
 {
-    return buildErrorResponse(status,close,config,std::vector<std::string>());
+    return buildErrorResponse(status,c,config,std::vector<std::string>());
 }
 
-std::string Engine::buildRedirectResponse(int status, const std::string& redirectTarget, int close)
+std::string Engine::buildRedirectResponse(int status, const std::string& redirectTarget, int c)
 {
     if (status != 301 && status != 302 && status != 303
         && status != 307 && status != 308)
@@ -64,10 +64,42 @@ std::string Engine::buildRedirectResponse(int status, const std::string& redirec
     std::stringstream str;
     str << status << " " << phraseForStatusEngine(status);
 
-    return buildResponse(str.str(),"",close,headers);
+    return buildResponse(str.str(),"",c,headers);
 }
 
-std::string Engine::buildResponse(const std::string& status, const std::string& resp, int close,
+std::string Engine::buildErrorResponse(int status,int c,const ServerConfig& config)
+{
+    const std::string phrase = phraseForStatusEngine(status);
+
+    const std::map<int, std::string>& errorPages = config.getErrorPage();
+
+    std::map<int, std::string>::const_iterator errorPage = errorPages.find(status);
+
+    if (errorPage != errorPages.end())
+    {
+        std::string path =
+            config.getRoot() + errorPage->second;
+
+        fileHandler handler;
+
+        if (handler.fileExists(path))
+        {
+            std::string content = handler.readFile(path);
+
+            std::stringstream str;
+            str << status << " " << phrase;
+
+            return buildResponse(str.str(), content, c);
+        }
+    }
+
+    std::stringstream str;
+    str << status << " " << phrase;
+
+    return buildResponse(str.str(), phrase, c);
+}
+
+std::string Engine::buildResponse(const std::string& status, const std::string& resp, int c,
 	const std::vector<std::string>& s)
 {
     std::stringstream str;
@@ -78,7 +110,7 @@ std::string Engine::buildResponse(const std::string& status, const std::string& 
     for (size_t i = 0; i < s.size(); ++i)
         str << s[i] << "\r\n";
 
-    if (close)
+    if (c)
         str << "Connection: close\r\n";
     else
         str << "Connection: keep-alive\r\n";
@@ -105,37 +137,33 @@ std::string Engine::appendHeaderToResponse(const std::string& response, const st
     return str;
 }
 
-std::string Engine::buildErrorResponse(int status,int close,const RequestConfig& config,const std::vector<std::string>& s)
+std::string Engine::buildErrorResponse(int status,int c,const RequestConfig& config,const std::vector<std::string>& s)
 {
     const std::string phrase = phraseForStatusEngine(status);
 
-    if (config != NULL)
-    {
-        const std::map<int, std::string>& errorPages = config->getErrorPage();
+	const std::map<int, std::string>& errorPages = config.getErrorPage();
 
-        std::map<int, std::string>::const_iterator errorPage =
-            errorPages.find(status);
+	std::map<int, std::string>::const_iterator errorPage = errorPages.find(status);
 
-        if (errorPage != errorPages.end())
-        {
-            std::string fullErrorPagePath = config->getRoot() + errorPage->second;
+	if (errorPage != errorPages.end())
+	{
+		std::string path = config.getRoot() + errorPage->second;
 
-            fileHandler handler;
+		fileHandler handler;
 
-            if (handler.fileExists(fullErrorPagePath))
-            {
-                std::string errorPageContent = handler.readFile(fullErrorPagePath);
+		if (handler.fileExists(path))
+		{
+			std::string page = handler.readFile(path);
 
-                std::stringstream str;
-                str << status << " " << phrase;
+			std::stringstream str;
+			str << status << " " << phrase;
 
-                return buildResponse(str.str(),errorPageContent,close,s);
-            }
-        }
-    }
+			return buildResponse(str.str(),page,c,s);
+		}
+	}
 
     std::stringstream str;
     str << status << " " << phrase;
 
-    return buildResponse(str.str(),phrase,close,s);
+    return buildResponse(str.str(),phrase,c,s);
 }
