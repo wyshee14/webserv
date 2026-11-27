@@ -106,7 +106,9 @@ std::string Engine::routeRequest(http& input,int c,const RequestConfig& route)
 std::string Engine::processGet(http& input, int c, const RequestConfig& config)
 {
     if (checkPath(input.getPath()))
+	{
         return buildErrorResponse(403, c, config);
+	}
 
 	std::string file;
 
@@ -163,7 +165,9 @@ std::string Engine::processGet(http& input, int c, const RequestConfig& config)
 std::string Engine::processPost(http& input,int c,const RequestConfig& config)
 {
 	if (checkPath(input.getPath()))
+	{
 		return buildErrorResponse(403, c, config);
+	}
 
     const std::string& path = input.getPath();
 
@@ -200,8 +204,10 @@ std::string Engine::processPost(http& input,int c,const RequestConfig& config)
 std::string Engine::processDelete(http& input,int c,const RequestConfig& config)
 {
     if (checkPath(input.getPath()))
+	{
         return buildErrorResponse(403, c, config);
-    
+	}
+
 	fileHandler handler;
 
     std::string path = handler.resolvePath(input.getPath(), config.getRoot());
