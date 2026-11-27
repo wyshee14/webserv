@@ -38,7 +38,9 @@ int http::getRequest(const std::string& line)
         return 1;
 
     if (version != "HTTP/1.1")
+	{
         return 1;
+	}
 
 	return 0;
 }
