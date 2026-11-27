@@ -70,12 +70,12 @@ int ensureDirectoryExistsEngine(const std::string& dir)
     if (dir.empty())
         return 0;
 
-    struct stat stat;
+    struct stat st;
 
-    if (stat(dir.c_str(), &stat) != 0)
+    if (stat(dir.c_str(), &st) != 0)
         return 0;
 
-    return S_ISDIR(stat.st_mode) ? 1 : 0;
+    return S_ISDIR(st.st_mode) ? 1 : 0;
 }
 
 std::string Engine::routeRequest(http& input,int c,const RequestConfig& route)
@@ -117,9 +117,9 @@ std::string Engine::processGet(http& input, int c, const RequestConfig& config)
 
     std::string path = handler.resolvePath(input.getPath(), config.getRoot());
 
-    struct stat stat;
+    struct stat st;
 
-    if (stat(path.c_str(), &stat) == 0 && S_ISDIR(stat.st_mode))
+    if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode))
     {
         if (!file.empty())
         {
