@@ -25,8 +25,7 @@ class Engine
 		std::string buildErrorResponse(int status, int c, const RequestConfig& config);
 		std::string buildRedirectResponse(int status, const std::string& redirectTarget, int c);
 		std::string buildErrorResponse(int status,int c,const ServerConfig& config);
-		std::string buildResponse(const std::string& status, const std::string& responseBody, int c, const std::vector<std::string>& s);
-		std::string appendHeaderToResponse(const std::string& response, const std::string& headerLine);
+		std::string buildResponse(const std::string& status, const std::string& resp, int c, const std::vector<std::string>& s);
 		std::string buildErrorResponse(int status, int c, const RequestConfig& config, const std::vector<std::string>& s);
 };
 

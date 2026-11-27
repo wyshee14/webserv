@@ -89,18 +89,17 @@ std::string Engine::buildErrorResponse(int status,int c,const ServerConfig& conf
             std::stringstream str;
             str << status << " " << phrase;
 
-            return buildResponse(str.str(), content, c);
+            return buildResponse(str.str(), content, c, std::vector<std::string>());
         }
     }
 
     std::stringstream str;
     str << status << " " << phrase;
 
-    return buildResponse(str.str(), phrase, c);
+    return buildResponse(str.str(), phrase, c, std::vector<std::string>());
 }
 
-std::string Engine::buildResponse(const std::string& status, const std::string& resp, int c,
-	const std::vector<std::string>& s)
+std::string Engine::buildResponse(const std::string& status, const std::string& resp, int c, const std::vector<std::string>& s)
 {
     std::stringstream str;
 
@@ -119,22 +118,6 @@ std::string Engine::buildResponse(const std::string& status, const std::string& 
     str << resp;
 
     return str.str();
-}
-
-std::string Engine::appendHeaderToResponse(const std::string& response, const std::string& headerLine)
-{
-    if (headerLine.empty())
-        return response;
-
-    size_t headerPosition = response.find("\r\n\r\n");
-
-    if (headerPosition == std::string::npos)
-        return response;
-
-    std::stringstream str;
-    str << response.substr(0, headerPosition) << "\r\n" << headerLine << response.substr(headerPosition);
-
-    return str;
 }
 
 std::string Engine::buildErrorResponse(int status,int c,const RequestConfig& config,const std::vector<std::string>& s)
