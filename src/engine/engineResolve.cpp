@@ -155,7 +155,9 @@ std::string Engine::processGet(http& input, int c, const RequestConfig& config)
     }
 
     if (!handler.fileExists(path))
+	{
         return buildErrorResponse(404, c, config);
+	}
 
 	std::string content = handler.readFile(path);
 
