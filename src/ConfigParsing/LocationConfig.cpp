@@ -9,6 +9,8 @@ LocationConfig::LocationConfig()
 	_allowedMethods.push_back("GET");
 	_allowedMethods.push_back("POST");
 	_allowedMethods.push_back("DELETE");
+	_redirectTarget = "";
+	_redirectCode = 0;
     _hasRoot = false;
     _hasAutoindex = false;
     _hasClientMaxBodySize = false;

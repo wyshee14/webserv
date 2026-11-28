@@ -190,19 +190,11 @@ void ServerConfig::addLocation(LocationConfig &location)
 
 const LocationConfig *ServerConfig::findLocation(const std::string &uri) const
 {
-    const LocationConfig *best = NULL;
-    size_t bestLength = 0;
-
     for (std::vector<LocationConfig>::const_iterator it = _locations.begin();
          it != _locations.end(); ++it)
     {
-        const std::string &path = it->getPath();
-        // longest matching prefix wins, e.g. /images beats /
-        if (uri.compare(0, path.size(), path) == 0 && path.size() > bestLength)
-        {
-            best = &(*it);
-            bestLength = path.size();
-        }
+        if (uri == it->getPath())
+            return &(*it);
     }
-    return best;
+    return NULL;
 }

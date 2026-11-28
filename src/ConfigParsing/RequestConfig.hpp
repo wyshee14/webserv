@@ -18,6 +18,9 @@ class RequestConfig
         std::map<int, std::string> _errorPage;
         bool _autoindex;
         size_t _clientMaxBodySize;
+		std::vector<std::string> _allowedMethods;
+		std::string _redirectTarget;
+        int _redirectCode;
 		bool _hasLocation;
 
 		void setConfig();
@@ -35,7 +38,10 @@ class RequestConfig
         const std::map<int, std::string> &getErrorPage() const;
         const bool &getAutoindex() const;
         const size_t &getClientMaxBodySize() const;
-		const bool hasLocation() const;
+        const int &getRedirectCode() const;
+        const std::string &getRedirectTarget() const;
+        const std::vector<std::string> &getAllowedMethods() const;		
+		bool hasLocation() const;
 };
 
 // <-----TO BE REMOVED (FOR DEBUGGING PURPOSE ONLY)----->

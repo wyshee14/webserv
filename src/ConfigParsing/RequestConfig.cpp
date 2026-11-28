@@ -3,13 +3,19 @@
 
 RequestConfig::RequestConfig(const std::string &requestPath, const ServerConfig &serverConfig)
 	: _path(requestPath), _serverConfig(&serverConfig), _autoindex(false),
-	  _clientMaxBodySize(0), _hasLocation(false)
+	  _clientMaxBodySize(0), _redirectTarget(), _redirectCode(0), _hasLocation(false)
 {
+	_allowedMethods.push_back("GET");
+	_allowedMethods.push_back("POST");
+	_allowedMethods.push_back("DELETE");
 	setConfig();
 }
 
 RequestConfig::RequestConfig(const RequestConfig &copy)
-	: _path(copy._path), _serverConfig(copy._serverConfig)
+	: _path(copy._path), _serverConfig(copy._serverConfig),
+	  _allowedMethods(copy._allowedMethods),
+	  _redirectTarget(copy._redirectTarget), _redirectCode(copy._redirectCode),
+	  _hasLocation(copy._hasLocation)
 {
 	_root = copy._root;
 	_indexFiles = copy._indexFiles;
@@ -29,6 +35,10 @@ RequestConfig &RequestConfig::operator=(const RequestConfig &other)
 		_errorPage = other._errorPage;
 		_autoindex = other._autoindex;
 		_clientMaxBodySize = other._clientMaxBodySize;
+		_allowedMethods = other._allowedMethods;
+		_redirectTarget = other._redirectTarget;
+		_redirectCode = other._redirectCode;
+		_hasLocation = other._hasLocation;
 	}
 	return (*this);
 }
@@ -64,6 +74,13 @@ void RequestConfig::setConfig()
 		_autoindex = location->getAutoindex();
 	if (location->hasClientMaxBodySize())
 		_clientMaxBodySize = location->getClientMaxBodySize();
+	if (location->hasAllowedMethods())
+		_allowedMethods = location->getAllowedMethods();
+	if (location->hasRedirect())
+	{
+		_redirectCode = location->getRedirectCode();
+		_redirectTarget = location->getRedirectTarget();
+	}
 }
 
 const std::string &RequestConfig::getPath() const
@@ -96,7 +113,22 @@ const std::string &RequestConfig::getRoot() const
 	return _root;
 }
 
-const bool RequestConfig::hasLocation() const
+const int &RequestConfig::getRedirectCode() const
+{
+	return _redirectCode;
+}
+
+const std::string &RequestConfig::getRedirectTarget() const
+{
+	return _redirectTarget;
+}
+
+const std::vector<std::string> &RequestConfig::getAllowedMethods() const
+{
+	return _allowedMethods;
+}
+
+bool RequestConfig::hasLocation() const
 {
 	return _hasLocation;
 }
@@ -104,15 +136,42 @@ const bool RequestConfig::hasLocation() const
 // <-----TO BE REMOVED (FOR DEBUGGING PURPOSE ONLY)----->
 void printRequestConfig(const RequestConfig &config)
 {
-	std::cout << "request " << config.getPath() << " {" << std::endl;
-	std::cout << "    root: " << config.getRoot() << std::endl;
+	std::cout << "request ";
+	if (config.getPath().empty())
+		std::cout << "null";
+	else
+		std::cout << config.getPath();
+	std::cout << " {" << std::endl;
+
+	std::cout << "    root: ";
+	if (config.getRoot().empty())
+		std::cout << "null";
+	else
+		std::cout << config.getRoot();
+	std::cout << std::endl;
 
 	std::cout << "    index: ";
 	const std::vector<std::string> &indexFiles = config.getIndex();
+	if (indexFiles.empty())
+		std::cout << "null";
 	for (std::vector<std::string>::const_iterator it = indexFiles.begin();
 		 it != indexFiles.end(); ++it)
 	{
 		std::cout << *it << " ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "    error_page:";
+	const std::map<int, std::string> &errorPages = config.getErrorPage();
+	if (errorPages.empty())
+		std::cout << " null";
+	else
+	{
+		for (std::map<int, std::string>::const_iterator it = errorPages.begin();
+			 it != errorPages.end(); ++it)
+		{
+			std::cout << " " << it->first << " " << it->second;
+		}
 	}
 	std::cout << std::endl;
 
@@ -124,13 +183,34 @@ void printRequestConfig(const RequestConfig &config)
 			  << config.getClientMaxBodySize()
 			  << std::endl;
 
-	const std::map<int, std::string> &errorPages = config.getErrorPage();
-	for (std::map<int, std::string>::const_iterator it = errorPages.begin();
-		 it != errorPages.end(); ++it)
+	std::cout << "    allowed_methods: ";
+	const std::vector<std::string> &allowedMethods = config.getAllowedMethods();
+	if (allowedMethods.empty())
+		std::cout << "null";
+	for (std::vector<std::string>::const_iterator it = allowedMethods.begin();
+		 it != allowedMethods.end(); ++it)
 	{
-		std::cout << "    error_page: "
-				  << it->first << " " << it->second << std::endl;
+		std::cout << *it << " ";
 	}
+	std::cout << std::endl;
+
+	std::cout << "    redirect_code: ";
+	if (config.getRedirectTarget().empty())
+		std::cout << "null";
+	else
+		std::cout << config.getRedirectCode();
+	std::cout << std::endl;
+
+	std::cout << "    redirect_target: ";
+	if (config.getRedirectTarget().empty())
+		std::cout << "null";
+	else
+		std::cout << config.getRedirectTarget();
+	std::cout << std::endl;
+
+	std::cout << "    has_location: "
+			  << (config.hasLocation() ? "true" : "false")
+			  << std::endl;
 
 	std::cout << "}" << std::endl;
 }

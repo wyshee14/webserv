@@ -10,7 +10,8 @@ Webserv::Webserv(const std::string &configPath)
 	const std::string address = "0.0.0.0";
 	uint16_t port = 8080;
 	const std::string path = "/images";
-	// only this line is requirred, http should check the _hasLocation, if false return 404, if true use the config
+	// only this line is requirred, http should check the _hasLocation, if false return error, if true use the config
+	// when the request path is empty for example localhost:8080, serves what it should be in index
 	RequestConfig request = requestConfig(path, findServerByEndpoint(address, port));
 	// remove this line
 	printRequestConfig(request);
